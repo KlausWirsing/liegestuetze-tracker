@@ -246,10 +246,19 @@
     });
   }
 
+  var changeListeners = [];
+
   function render() {
     renderHome();
     renderStats();
+    var total = totalCount();
+    changeListeners.forEach(function (cb) { cb(total); });
   }
+
+  window.PushupApp = {
+    getTotal: totalCount,
+    onChange: function (cb) { changeListeners.push(cb); }
+  };
 
   // ---- Undo Toast ----
   var undoToast = document.getElementById("undo-toast");

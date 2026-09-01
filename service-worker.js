@@ -1,9 +1,12 @@
-var CACHE_NAME = "pushup-cache-v1";
+var CACHE_NAME = "pushup-cache-v2";
 var ASSETS = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
+  "./firebase-config.js",
+  "./cloud.js",
+  "./group-ui.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

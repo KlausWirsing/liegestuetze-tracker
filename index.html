@@ -98,9 +98,49 @@
   </section>
 </main>
 
+<main id="view-group" class="view hidden">
+  <section id="group-join-card" class="join-card">
+    <h2 class="section-title">Mit Freunden vergleichen</h2>
+    <p class="section-hint">Erstelle eine Gruppe oder tritt mit einem Code bei, um live zu sehen, wer vorne liegt.</p>
+
+    <label class="field-label" for="input-name">Dein Name</label>
+    <input id="input-name" class="text-input" type="text" maxlength="24" placeholder="z. B. Max" autocomplete="off">
+
+    <button id="btn-create-group" class="primary-btn">Neue Gruppe erstellen</button>
+
+    <div class="divider"><span>oder</span></div>
+
+    <label class="field-label" for="input-code">Gruppencode</label>
+    <input id="input-code" class="text-input code-input" type="text" maxlength="12" placeholder="z. B. AB3XQ9" autocomplete="off">
+    <button id="btn-join-group" class="secondary-btn">Gruppe beitreten</button>
+
+    <p id="group-error" class="group-error hidden"></p>
+  </section>
+
+  <section id="group-board-card" class="hidden">
+    <div class="group-code-row">
+      <div>
+        <div class="section-hint">Gruppencode zum Teilen</div>
+        <div id="group-code-display" class="group-code-display"></div>
+      </div>
+      <button id="btn-copy-code" class="copy-btn">Kopieren</button>
+    </div>
+
+    <div id="leaderboard-lead" class="leaderboard-lead"></div>
+
+    <div id="leaderboard-list" class="leaderboard-list"></div>
+
+    <button id="btn-leave-group" class="text-btn">Gruppe verlassen</button>
+  </section>
+</main>
+
 <div id="undo-toast" class="undo-toast hidden">
   <span id="undo-text"></span>
   <button id="undo-btn">Rückgängig</button>
+</div>
+
+<div id="copy-toast" class="undo-toast hidden">
+  <span>Code kopiert!</span>
 </div>
 
 <nav class="tabbar">
@@ -110,8 +150,14 @@
   <button id="tab-stats" class="tab-btn" data-view="view-stats">
     <span class="tab-icon">📊</span><span>Statistik</span>
   </button>
+  <button id="tab-group" class="tab-btn" data-view="view-group">
+    <span class="tab-icon">🤼</span><span>Vergleich</span>
+  </button>
 </nav>
 
 <script src="app.js"></script>
+<script src="firebase-config.js"></script>
+<script type="module" src="cloud.js"></script>
+<script type="module" src="group-ui.js"></script>
 </body>
 </html>
