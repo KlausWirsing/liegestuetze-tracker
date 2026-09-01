@@ -1,7 +1,7 @@
 {
   "name": "Liegestütze Tracker",
   "short_name": "Liegestütze",
-  "description": "Einfacher Liegestütze-Zähler – 100.000 in 3 Jahren.",
+  "description": "Einfacher Liegestütze-Zähler – Ziel: 10.000.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
