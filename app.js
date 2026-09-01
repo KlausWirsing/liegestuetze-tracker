@@ -257,6 +257,8 @@
 
   window.PushupApp = {
     getTotal: totalCount,
+    getEntries: function () { return entries; },
+    getStartDate: function () { return startDate; },
     onChange: function (cb) { changeListeners.push(cb); }
   };
 
