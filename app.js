@@ -2,8 +2,7 @@
   "use strict";
 
   // ---- Konfiguration ----
-  var GOAL = 100000;
-  var GOAL_YEARS = 3;
+  var GOAL = 10000;
   var STORAGE_KEY_ENTRIES = "pushup_entries_v1";
   var STORAGE_KEY_START = "pushup_start_date_v1";
 
@@ -166,19 +165,10 @@
     elProgressBar.style.width = pct.toFixed(2) + "%";
     elProgressPct.textContent = (pct < 10 ? pct.toFixed(1) : Math.round(pct)) + " %";
 
-    var targetDate = new Date(startDate);
-    targetDate.setFullYear(targetDate.getFullYear() + GOAL_YEARS);
     var remaining = Math.max(0, GOAL - total);
-    var daysLeft = Math.max(1, Math.ceil((targetDate.getTime() - Date.now()) / 86400000));
-    var neededPerDay = remaining / daysLeft;
-
-    if (remaining === 0) {
-      elProgressSub.textContent = "Ziel erreicht! 🎉";
-    } else {
-      elProgressSub.textContent =
-        fmtInt(remaining) + " übrig · " + neededPerDay.toFixed(1) + " / Tag bis " +
-        targetDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
-    }
+    elProgressSub.textContent = remaining === 0
+      ? "Ziel erreicht! 🎉"
+      : fmtInt(remaining) + " übrig bis " + fmtInt(GOAL);
   }
 
   function renderStats() {
@@ -259,6 +249,7 @@
     getTotal: totalCount,
     getEntries: function () { return entries; },
     getStartDate: function () { return startDate; },
+    getTodayTotal: function () { return sumSince(startOfDay(new Date())); },
     onChange: function (cb) { changeListeners.push(cb); }
   };
 

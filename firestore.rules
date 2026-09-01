@@ -12,5 +12,17 @@ service cloud.firestore {
                    && request.resource.data.total >= 0
                    && request.resource.data.total <= 10000000;
     }
+
+    match /groups/{groupCode}/fights/{fightId} {
+      allow read: if groupCode is string && groupCode.size() >= 4 && groupCode.size() <= 12;
+      allow create: if request.auth != null
+                    && request.resource.data.challengerUid == request.auth.uid
+                    && request.resource.data.opponentUid is string
+                    && request.resource.data.winnerUid is string
+                    && request.resource.data.challengerName is string
+                    && request.resource.data.opponentName is string
+                    && request.resource.data.winnerName is string;
+      allow update, delete: if false;
+    }
   }
 }

@@ -8,9 +8,13 @@ import {
   getFirestore,
   doc,
   setDoc,
+  addDoc,
   collection,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  query,
+  orderBy,
+  limit
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 (function () {
@@ -19,14 +23,19 @@ import {
   var STORAGE_CODE = "pushup_group_code_v1";
   var STORAGE_NAME = "pushup_display_name_v1";
   var CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // ohne 0/O/1/I/L zur besseren Lesbarkeit
+  var TAUNTS_PER_WEEK = 2;
 
   var app, auth, db;
   var uid = null;
-  var unsubscribe = null;
+  var unsubscribePlayers = null;
+  var unsubscribeFights = null;
   var readyCallbacks = [];
   var leaderboardCallbacks = [];
+  var fightCallbacks = [];
   var lastLeaderboard = [];
+  var lastFights = [];
   var isReady = false;
+  var lastSelfTotal = 0;
 
   function generateCode() {
     var code = "";
@@ -48,14 +57,21 @@ import {
     return localStorage.getItem(STORAGE_NAME) || "";
   }
 
+  // Woche = Sonntag bis Sonntag
+  function weekKeyFor(date) {
+    var d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - d.getDay());
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+
   function subscribeToGroup(code) {
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
+    if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; }
+    if (unsubscribeFights) { unsubscribeFights(); unsubscribeFights = null; }
     if (!code || !db) return;
-    var col = collection(db, "groups", code, "players");
-    unsubscribe = onSnapshot(col, function (snapshot) {
+
+    var playersCol = collection(db, "groups", code, "players");
+    unsubscribePlayers = onSnapshot(playersCol, function (snapshot) {
       var players = [];
       snapshot.forEach(function (docSnap) {
         var data = docSnap.data();
@@ -63,6 +79,12 @@ import {
           uid: docSnap.id,
           name: data.name || "?",
           total: typeof data.total === "number" ? data.total : 0,
+          todayTotal: typeof data.todayTotal === "number" ? data.todayTotal : 0,
+          todayDate: data.todayDate || "",
+          muscleLevel: typeof data.muscleLevel === "number" ? data.muscleLevel : 2,
+          mood: data.mood || "neutral",
+          tauntWeekKey: data.tauntWeekKey || "",
+          tauntCount: typeof data.tauntCount === "number" ? data.tauntCount : 0,
           isMe: docSnap.id === uid
         });
       });
@@ -73,16 +95,57 @@ import {
       lastLeaderboard = [];
       leaderboardCallbacks.forEach(function (cb) { cb([]); });
     });
+
+    var fightsCol = query(collection(db, "groups", code, "fights"), orderBy("createdAt", "desc"), limit(50));
+    unsubscribeFights = onSnapshot(fightsCol, function (snapshot) {
+      var fights = [];
+      snapshot.forEach(function (docSnap) {
+        var data = docSnap.data();
+        fights.push({
+          id: docSnap.id,
+          challengerUid: data.challengerUid,
+          challengerName: data.challengerName,
+          opponentUid: data.opponentUid,
+          opponentName: data.opponentName,
+          winnerUid: data.winnerUid,
+          winnerName: data.winnerName,
+          createdAtMs: data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : Date.now()
+        });
+      });
+      lastFights = fights;
+      fightCallbacks.forEach(function (cb) { cb(fights); });
+    }, function () {
+      lastFights = [];
+      fightCallbacks.forEach(function (cb) { cb([]); });
+    });
   }
 
-  function writeSelf(code, name, total) {
+  function writeSelf(code, name, total, extra) {
     if (!db || !uid || !code) return Promise.resolve();
     var ref = doc(db, "groups", code, "players", uid);
-    return setDoc(ref, {
+    var payload = {
       name: (name || "Ich").slice(0, 24),
       total: Math.max(0, Math.floor(total || 0)),
       updatedAt: serverTimestamp()
-    }, { merge: true });
+    };
+    if (extra) {
+      for (var k in extra) if (extra.hasOwnProperty(k)) payload[k] = extra[k];
+    }
+    return setDoc(ref, payload, { merge: true });
+  }
+
+  function currentStatsExtra() {
+    var extra = {};
+    if (window.PushupApp) {
+      extra.todayTotal = window.PushupApp.getTodayTotal();
+      var d = new Date();
+      extra.todayDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    }
+    if (window.PushupBuddy) {
+      extra.muscleLevel = window.PushupBuddy.getMuscleLevel();
+      extra.mood = window.PushupBuddy.getMood();
+    }
+    return extra;
   }
 
   function init() {
@@ -123,7 +186,7 @@ import {
       localStorage.setItem(STORAGE_CODE, code);
       localStorage.setItem(STORAGE_NAME, name || "Ich");
       subscribeToGroup(code);
-      return writeSelf(code, name, currentTotal).then(function () { return code; });
+      return writeSelf(code, name, currentTotal, currentStatsExtra()).then(function () { return code; });
     },
 
     joinGroup: function (code, name, currentTotal) {
@@ -132,20 +195,23 @@ import {
       localStorage.setItem(STORAGE_CODE, normalized);
       localStorage.setItem(STORAGE_NAME, name || "Ich");
       subscribeToGroup(normalized);
-      return writeSelf(normalized, name, currentTotal).then(function () { return normalized; });
+      return writeSelf(normalized, name, currentTotal, currentStatsExtra()).then(function () { return normalized; });
     },
 
     leaveGroup: function () {
       localStorage.removeItem(STORAGE_CODE);
-      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+      if (unsubscribePlayers) { unsubscribePlayers(); unsubscribePlayers = null; }
+      if (unsubscribeFights) { unsubscribeFights(); unsubscribeFights = null; }
       lastLeaderboard = [];
+      lastFights = [];
       leaderboardCallbacks.forEach(function (cb) { cb([]); });
+      fightCallbacks.forEach(function (cb) { cb([]); });
     },
 
     renameSelf: function (name) {
       localStorage.setItem(STORAGE_NAME, name || "Ich");
       var code = getGroupCode();
-      if (code) return writeSelf(code, name, lastSelfTotal);
+      if (code) return writeSelf(code, name, lastSelfTotal, currentStatsExtra());
       return Promise.resolve();
     },
 
@@ -153,16 +219,79 @@ import {
       lastSelfTotal = total;
       var code = getGroupCode();
       if (!code || !isReady) return Promise.resolve();
-      return writeSelf(code, getDisplayName(), total);
+      return writeSelf(code, getDisplayName(), total, currentStatsExtra());
     },
 
     onLeaderboard: function (cb) {
       leaderboardCallbacks.push(cb);
       if (getGroupCode()) cb(lastLeaderboard);
+    },
+    getLeaderboardSnapshot: function () { return lastLeaderboard; },
+
+    onFights: function (cb) {
+      fightCallbacks.push(cb);
+      if (getGroupCode()) cb(lastFights);
+    },
+    getFightsSnapshot: function () { return lastFights; },
+
+    // Anpöbeln: zweimal pro Woche (So-So) pro Person
+    getTauntsRemaining: function () {
+      var me = null;
+      for (var i = 0; i < lastLeaderboard.length; i++) {
+        if (lastLeaderboard[i].isMe) { me = lastLeaderboard[i]; break; }
+      }
+      var wk = weekKeyFor(new Date());
+      if (!me || me.tauntWeekKey !== wk) return TAUNTS_PER_WEEK;
+      return Math.max(0, TAUNTS_PER_WEEK - me.tauntCount);
+    },
+
+    challenge: function (opponentUid, opponentName) {
+      var code = getGroupCode();
+      if (!code || !uid) return Promise.reject(new Error("no-group"));
+      var remaining = api.getTauntsRemaining();
+      if (remaining <= 0) return Promise.reject(new Error("no-taunts-left"));
+
+      var me = null, opponent = null;
+      for (var i = 0; i < lastLeaderboard.length; i++) {
+        if (lastLeaderboard[i].isMe) me = lastLeaderboard[i];
+        if (lastLeaderboard[i].uid === opponentUid) opponent = lastLeaderboard[i];
+      }
+      if (!me || !opponent) return Promise.reject(new Error("player-not-found"));
+
+      function strength(p) {
+        var moodBonus = p.mood === "happy" ? 6 : (p.mood === "angry" ? -6 : 0);
+        return (p.todayTotal || 0) * 1.5
+          + Math.min(p.total, 5000) * 0.02
+          + (p.muscleLevel || 2) * 6
+          + moodBonus
+          + (Math.random() * 16 - 8);
+      }
+
+      var myScore = strength(me);
+      var oppScore = strength(opponent);
+      var winner = myScore >= oppScore ? me : opponent;
+
+      var wk = weekKeyFor(new Date());
+      var newCount = (me.tauntWeekKey === wk ? me.tauntCount : 0) + 1;
+
+      return writeSelf(code, getDisplayName(), lastSelfTotal, {
+        tauntWeekKey: wk,
+        tauntCount: newCount
+      }).then(function () {
+        return addDoc(collection(db, "groups", code, "fights"), {
+          challengerUid: uid,
+          challengerName: me.name,
+          opponentUid: opponent.uid,
+          opponentName: opponent.name,
+          winnerUid: winner.uid,
+          winnerName: winner.name,
+          createdAt: serverTimestamp()
+        });
+      }).then(function (docRef) {
+        return { id: docRef.id, me: me, opponent: opponent, winnerUid: winner.uid, winnerName: winner.name };
+      });
     }
   };
-
-  var lastSelfTotal = 0;
 
   window.PushupCloud = api;
   init();

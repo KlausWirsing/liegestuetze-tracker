@@ -29,7 +29,7 @@
 
   <section class="progress-card">
     <div class="progress-header">
-      <span>Ziel: 100.000 in 3 Jahren</span>
+      <span>Ziel: 10.000 Liegestütze</span>
       <span id="progress-pct">0 %</span>
     </div>
     <div class="progress-track">
@@ -40,45 +40,36 @@
 
   <section class="buddy-card">
     <svg id="buddy-svg" class="buddy" data-mood="neutral" data-muscle="2" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <line x1="86" y1="168" x2="86" y2="215" class="limb" stroke-width="16"/>
-      <line x1="114" y1="168" x2="114" y2="215" class="limb" stroke-width="16"/>
-      <ellipse cx="86" cy="218" rx="12" ry="6" class="shoe-fill"/>
-      <ellipse cx="114" cy="218" rx="12" ry="6" class="shoe-fill"/>
+      <line x1="100" y1="150" x2="80" y2="212" class="stick-line"/>
+      <line x1="100" y1="150" x2="120" y2="212" class="stick-line"/>
+      <line x1="100" y1="70" x2="100" y2="150" class="stick-line"/>
 
-      <rect x="70" y="98" width="60" height="74" rx="26" class="torso-fill"/>
+      <polyline points="100,90 70,120 88,74" class="stick-line arm-left"/>
+      <polyline points="100,90 130,120 112,74" class="stick-line arm-right"/>
+      <circle cx="85" cy="105" r="9" class="bicep bicep-left"/>
+      <circle cx="115" cy="105" r="9" class="bicep bicep-right"/>
 
-      <line x1="74" y1="112" x2="46" y2="142" class="limb" stroke-width="15"/>
-      <line x1="46" y1="142" x2="62" y2="96" class="limb" stroke-width="14"/>
-      <circle cx="58" cy="128" r="16" class="bicep bicep-left"/>
-      <circle cx="62" cy="93" r="9" class="skin-fill"/>
-
-      <line x1="126" y1="112" x2="154" y2="142" class="limb" stroke-width="15"/>
-      <line x1="154" y1="142" x2="138" y2="96" class="limb" stroke-width="14"/>
-      <circle cx="142" cy="128" r="16" class="bicep bicep-right"/>
-      <circle cx="138" cy="93" r="9" class="skin-fill"/>
-
-      <rect x="92" y="80" width="16" height="20" rx="6" class="skin-fill"/>
-      <circle cx="100" cy="56" r="30" class="skin-fill"/>
+      <circle cx="100" cy="48" r="22" class="stick-head"/>
 
       <g class="buddy-eyes">
-        <circle cx="90" cy="52" r="3.2"/>
-        <circle cx="110" cy="52" r="3.2"/>
+        <circle cx="92" cy="46" r="2.4"/>
+        <circle cx="108" cy="46" r="2.4"/>
       </g>
 
       <g class="mood-group mood-happy">
-        <path d="M80,42 Q90,34 98,40" class="brow"/>
-        <path d="M102,40 Q110,34 120,42" class="brow"/>
-        <path d="M83,63 Q100,80 117,63" class="mouth"/>
+        <path d="M84,36 Q92,29 99,35" class="brow"/>
+        <path d="M101,35 Q108,29 116,36" class="brow"/>
+        <path d="M86,54 Q100,66 114,54" class="mouth"/>
       </g>
       <g class="mood-group mood-neutral">
-        <path d="M81,40 L97,42" class="brow"/>
-        <path d="M103,42 L119,40" class="brow"/>
-        <path d="M87,66 Q100,70 113,66" class="mouth"/>
+        <path d="M84,34 L98,36" class="brow"/>
+        <path d="M102,36 L116,34" class="brow"/>
+        <path d="M89,57 Q100,60 111,57" class="mouth"/>
       </g>
       <g class="mood-group mood-angry">
-        <path d="M81,38 L97,45" class="brow"/>
-        <path d="M103,45 L119,38" class="brow"/>
-        <path d="M86,71 Q100,61 114,71" class="mouth"/>
+        <path d="M84,32 L98,38" class="brow"/>
+        <path d="M102,38 L116,32" class="brow"/>
+        <path d="M87,60 Q100,52 113,60" class="mouth"/>
       </g>
     </svg>
     <div id="buddy-caption" class="buddy-caption">Los geht's – dein Buddy wartet!</div>
@@ -174,11 +165,62 @@
 
     <div id="leaderboard-lead" class="leaderboard-lead"></div>
 
+    <div id="taunt-status" class="taunt-status"></div>
+
     <div id="leaderboard-list" class="leaderboard-list"></div>
 
     <button id="btn-leave-group" class="text-btn">Gruppe verlassen</button>
   </section>
 </main>
+
+<div id="battle-overlay" class="battle-overlay hidden">
+  <div class="battle-names">
+    <span id="battle-left-name"></span>
+    <span class="battle-vs">VS</span>
+    <span id="battle-right-name"></span>
+  </div>
+  <div class="battle-arena">
+    <svg id="battle-left" class="fighter" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+      <line x1="100" y1="150" x2="80" y2="212" class="stick-line"/>
+      <line x1="100" y1="150" x2="120" y2="212" class="stick-line"/>
+      <line x1="100" y1="70" x2="100" y2="150" class="stick-line"/>
+      <g class="fighter-arm fighter-arm-back">
+        <polyline points="100,90 70,120 88,74" class="stick-line"/>
+        <circle cx="85" cy="105" r="9" class="bicep"/>
+      </g>
+      <g class="fighter-arm fighter-arm-front">
+        <polyline points="100,90 130,120 112,74" class="stick-line"/>
+        <circle cx="115" cy="105" r="9" class="bicep"/>
+      </g>
+      <circle cx="100" cy="48" r="22" class="stick-head"/>
+      <g class="buddy-eyes"><circle cx="92" cy="46" r="2.4"/><circle cx="108" cy="46" r="2.4"/></g>
+      <path d="M84,32 L98,38" class="brow"/>
+      <path d="M102,38 L116,32" class="brow"/>
+      <path d="M87,60 Q100,52 113,60" class="mouth"/>
+    </svg>
+    <svg id="battle-right" class="fighter fighter-mirrored" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+      <line x1="100" y1="150" x2="80" y2="212" class="stick-line"/>
+      <line x1="100" y1="150" x2="120" y2="212" class="stick-line"/>
+      <line x1="100" y1="70" x2="100" y2="150" class="stick-line"/>
+      <g class="fighter-arm fighter-arm-back">
+        <polyline points="100,90 70,120 88,74" class="stick-line"/>
+        <circle cx="85" cy="105" r="9" class="bicep"/>
+      </g>
+      <g class="fighter-arm fighter-arm-front">
+        <polyline points="100,90 130,120 112,74" class="stick-line"/>
+        <circle cx="115" cy="105" r="9" class="bicep"/>
+      </g>
+      <circle cx="100" cy="48" r="22" class="stick-head"/>
+      <g class="buddy-eyes"><circle cx="92" cy="46" r="2.4"/><circle cx="108" cy="46" r="2.4"/></g>
+      <path d="M84,32 L98,38" class="brow"/>
+      <path d="M102,38 L116,32" class="brow"/>
+      <path d="M87,60 Q100,52 113,60" class="mouth"/>
+    </svg>
+    <div id="battle-impact" class="battle-impact"></div>
+  </div>
+  <div id="battle-result" class="battle-result hidden"></div>
+  <button id="battle-close" class="primary-btn hidden">Weiter</button>
+</div>
 
 <div id="undo-toast" class="undo-toast hidden">
   <span id="undo-text"></span>
@@ -187,6 +229,10 @@
 
 <div id="copy-toast" class="undo-toast hidden">
   <span>Code kopiert!</span>
+</div>
+
+<div id="small-milestone-toast" class="small-milestone-toast hidden">
+  <span id="small-milestone-text"></span>
 </div>
 
 <div id="celebration-overlay" class="celebration-overlay hidden">
@@ -212,6 +258,7 @@
 
 <script src="app.js"></script>
 <script src="buddy.js"></script>
+<script src="battle.js"></script>
 <script src="firebase-config.js"></script>
 <script type="module" src="cloud.js"></script>
 <script type="module" src="group-ui.js"></script>

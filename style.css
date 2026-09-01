@@ -150,21 +150,27 @@ button {
   line-height: 1.3;
 }
 
-.torso-fill { fill: var(--accent); }
-.shoe-fill { fill: #33363f; }
-.skin-fill { fill: #f2c396; }
-.limb { stroke: #f2c396; stroke-linecap: round; fill: none; }
+.stick-line {
+  stroke: var(--text);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.stick-head {
+  stroke: var(--text);
+  stroke-width: 5;
+  fill: none;
+}
 .bicep {
-  fill: #f2c396;
-  stroke: rgba(0, 0, 0, 0.08);
-  stroke-width: 1;
+  fill: var(--accent);
   transform-box: fill-box;
   transform-origin: center;
   transition: transform 0.35s ease;
 }
-.buddy-eyes circle { fill: #2b2b2b; }
-.brow { stroke: #2b2b2b; stroke-width: 3.5; fill: none; stroke-linecap: round; }
-.mouth { stroke: #2b2b2b; stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.buddy-eyes circle { fill: var(--text); }
+.brow { stroke: var(--text); stroke-width: 3; fill: none; stroke-linecap: round; }
+.mouth { stroke: var(--text); stroke-width: 3; fill: none; stroke-linecap: round; }
 
 .mood-group { display: none; }
 .buddy[data-mood="happy"] .mood-happy { display: inline; }
@@ -184,6 +190,31 @@ button {
   75% { transform: translateY(-6px) rotate(4deg); }
 }
 .buddy-cheer { animation: buddy-cheer-bounce 0.5s ease-in-out 4; }
+
+.small-milestone-toast {
+  position: fixed;
+  top: calc(14px + var(--safe-top));
+  left: 16px;
+  right: 16px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 14px;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  z-index: 25;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.small-milestone-toast.hidden {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+@media (min-width: 480px) {
+  .small-milestone-toast { max-width: 448px; margin: 0 auto; }
+}
 
 /* Meilenstein-Feier */
 .celebration-overlay {
@@ -231,6 +262,159 @@ button {
   font-weight: 800;
   line-height: 1.4;
   margin-bottom: 20px;
+}
+
+/* Kampfsystem */
+.taunt-status {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 4px 0 12px;
+}
+.challenge-btn {
+  background: var(--track);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.challenge-btn:active { background: var(--accent); }
+.challenge-btn[disabled] { opacity: 0.35; }
+.leaderboard-record {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.battle-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.battle-names {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.battle-vs { color: var(--accent); font-size: 13px; }
+.battle-arena {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  max-width: 360px;
+  height: 220px;
+}
+.fighter {
+  width: 45%;
+  height: 100%;
+}
+.fighter .stick-line, .fighter .stick-head { stroke: #fff; }
+.fighter .brow, .fighter .mouth, .fighter .buddy-eyes circle { stroke: #fff; fill: #fff; }
+.fighter .bicep { fill: var(--accent); }
+.fighter-mirrored { transform: scaleX(-1); }
+
+.fighter-arm { transform-box: view-box; transform-origin: 100px 90px; }
+
+.battle-arena.brawling #battle-left .fighter-arm-front {
+  animation: punch-swing 0.55s ease-in-out infinite;
+}
+.battle-arena.brawling #battle-right .fighter-arm-front {
+  animation: punch-swing 0.55s ease-in-out infinite;
+  animation-delay: 0.275s;
+}
+@keyframes punch-swing {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-45deg); }
+}
+.battle-arena.brawling #battle-left {
+  animation: lean-fwd 0.55s ease-in-out infinite;
+}
+.battle-arena.brawling #battle-right {
+  animation: lean-fwd 0.55s ease-in-out infinite;
+  animation-delay: 0.275s;
+}
+@keyframes lean-fwd {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(6px); }
+}
+.battle-arena.brawling #battle-right.fighter-mirrored {
+  animation-name: lean-fwd-mirrored;
+}
+@keyframes lean-fwd-mirrored {
+  0%, 100% { transform: scaleX(-1) translateX(0); }
+  50% { transform: scaleX(-1) translateX(6px); }
+}
+
+.impact-star {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  animation: impact-pop 0.4s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes impact-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  40% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+}
+
+.fighter.is-winner .fighter-arm {
+  animation: none !important;
+  transform: rotate(150deg) !important;
+  transition: transform 0.4s ease;
+}
+.fighter.is-winner {
+  animation: winner-bounce 0.5s ease-in-out 3 !important;
+}
+@keyframes winner-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.fighter.is-winner.fighter-mirrored { animation-name: winner-bounce-mirrored !important; }
+@keyframes winner-bounce-mirrored {
+  0%, 100% { transform: scaleX(-1) translateY(0); }
+  50% { transform: scaleX(-1) translateY(-10px); }
+}
+
+.fighter.is-loser {
+  animation: none !important;
+  transform: rotate(75deg) translateY(30px) !important;
+  opacity: 0.55;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+.fighter.is-loser.fighter-mirrored { transform: scaleX(-1) rotate(-75deg) translateY(30px) !important; }
+.fighter.is-loser .fighter-arm { animation: none !important; }
+
+.battle-result {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+  margin-top: 18px;
+}
+.battle-overlay #battle-close {
+  margin-top: 18px;
+  max-width: 260px;
 }
 
 .buttons-grid {
