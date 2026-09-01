@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Liegestütze Tracker</title>
+<meta name="description" content="Einfacher Liegestütze-Zähler – 100.000 in 3 Jahren.">
+<meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Liegestütze">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>Liegestütze</h1>
+</header>
+
+<main id="view-home" class="view">
+  <section class="total-card">
+    <div class="total-label">Gesamt</div>
+    <div id="total-count" class="total-number">0</div>
+  </section>
+
+  <section class="progress-card">
+    <div class="progress-header">
+      <span>Ziel: 100.000 in 3 Jahren</span>
+      <span id="progress-pct">0 %</span>
+    </div>
+    <div class="progress-track">
+      <div id="progress-bar" class="progress-bar"></div>
+    </div>
+    <div id="progress-sub" class="progress-sub"></div>
+  </section>
+
+  <section class="buttons-grid">
+    <button class="add-btn" data-amount="1">+1</button>
+    <button class="add-btn" data-amount="5">+5</button>
+    <button class="add-btn" data-amount="10">+10</button>
+    <button class="add-btn" data-amount="20">+20</button>
+    <button class="add-btn add-btn-wide" data-amount="50">+50</button>
+  </section>
+</main>
+
+<main id="view-stats" class="view hidden">
+  <section class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-value" id="stat-today">0</div>
+      <div class="stat-label">Heute</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="stat-week">0</div>
+      <div class="stat-label">Diese Woche</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="stat-month">0</div>
+      <div class="stat-label">Dieser Monat</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="stat-total">0</div>
+      <div class="stat-label">Gesamt</div>
+    </div>
+  </section>
+
+  <section class="streak-card">
+    <div class="streak-flame">🔥</div>
+    <div>
+      <div id="streak-value" class="streak-value">0 Tage</div>
+      <div class="streak-label">aktuelle Streak</div>
+    </div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-header">
+      <span>Tagesverlauf</span>
+      <div class="range-toggle">
+        <button id="range-7" class="range-btn active" data-range="7">7 Tage</button>
+        <button id="range-30" class="range-btn" data-range="30">30 Tage</button>
+      </div>
+    </div>
+    <div id="chart" class="chart"></div>
+  </section>
+
+  <section class="avg-grid">
+    <div class="stat-box">
+      <div class="stat-value" id="avg-total">0</div>
+      <div class="stat-label">Ø pro Tag (gesamt)</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="avg-week">0</div>
+      <div class="stat-label">Ø letzte 7 Tage</div>
+    </div>
+  </section>
+</main>
+
+<div id="undo-toast" class="undo-toast hidden">
+  <span id="undo-text"></span>
+  <button id="undo-btn">Rückgängig</button>
+</div>
+
+<nav class="tabbar">
+  <button id="tab-home" class="tab-btn active" data-view="view-home">
+    <span class="tab-icon">🏠</span><span>Start</span>
+  </button>
+  <button id="tab-stats" class="tab-btn" data-view="view-stats">
+    <span class="tab-icon">📊</span><span>Statistik</span>
+  </button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
