@@ -1,29 +1,34 @@
 (function () {
   "use strict";
 
-  var BRAWL_DURATION = 18000;
-  var IMPACT_INTERVAL = 550;
-  var IMPACT_EMOJI = ["💥", "✨", "⚡"];
+  var SLAP_CYCLE_MS = 1600;
+  var SLAP_COUNT = 5;
+  var KICK_MS = 600;
 
   var overlay = document.getElementById("battle-overlay");
-  var arena = document.querySelector(".battle-arena");
-  var leftFighter = document.getElementById("battle-left");
-  var rightFighter = document.getElementById("battle-right");
-  var leftNameEl = document.getElementById("battle-left-name");
-  var rightNameEl = document.getElementById("battle-right-name");
+  var scene = document.getElementById("battle-svg");
+  var attackerEl = document.getElementById("fighter-attacker");
+  var defenderEl = document.getElementById("fighter-defender");
+  var attackerNameEl = document.getElementById("battle-attacker-name");
+  var defenderNameEl = document.getElementById("battle-defender-name");
   var impactEl = document.getElementById("battle-impact");
   var resultEl = document.getElementById("battle-result");
   var closeBtn = document.getElementById("battle-close");
 
-  var impactTimer = null;
-  var resolveTimer = null;
+  var timers = [];
   var doneCallback = null;
 
-  function spawnImpact() {
+  function clearTimers() {
+    timers.forEach(function (t) { clearTimeout(t); clearInterval(t); });
+    timers = [];
+  }
+
+  function spawnImpact(leftPct, topPct) {
     var span = document.createElement("span");
     span.className = "impact-star";
-    span.textContent = IMPACT_EMOJI[Math.floor(Math.random() * IMPACT_EMOJI.length)];
-    span.style.left = (45 + Math.random() * 10) + "%";
+    span.textContent = ["💥", "✨", "⚡"][Math.floor(Math.random() * 3)];
+    span.style.left = leftPct + "%";
+    span.style.top = topPct + "%";
     impactEl.appendChild(span);
     setTimeout(function () {
       if (span.parentNode) span.parentNode.removeChild(span);
@@ -31,42 +36,60 @@
   }
 
   function reset() {
-    arena.classList.remove("brawling");
-    leftFighter.classList.remove("is-winner", "is-loser");
-    rightFighter.classList.remove("is-winner", "is-loser");
+    clearTimers();
+    scene.classList.remove("slapping", "kicking");
+    attackerEl.classList.remove("is-defeated", "is-winner");
+    defenderEl.classList.remove("is-defeated", "is-winner");
     resultEl.classList.add("hidden");
     closeBtn.classList.add("hidden");
     impactEl.innerHTML = "";
-    if (impactTimer) { clearInterval(impactTimer); impactTimer = null; }
-    if (resolveTimer) { clearTimeout(resolveTimer); resolveTimer = null; }
+  }
+
+  function finishFight(loserEl, opts) {
+    var winnerEl = loserEl === attackerEl ? defenderEl : attackerEl;
+    winnerEl.classList.add("is-winner");
+    loserEl.classList.add("is-defeated");
+    var winnerName = opts.attackerWins ? opts.attackerName : opts.defenderName;
+    var showTimer = setTimeout(function () {
+      resultEl.textContent = "🏳️ " + winnerName + " gewinnt!";
+      resultEl.classList.remove("hidden");
+      closeBtn.classList.remove("hidden");
+    }, 500);
+    timers.push(showTimer);
   }
 
   function play(opts) {
     reset();
-    leftNameEl.textContent = opts.leftName;
-    rightNameEl.textContent = opts.rightName;
+    attackerNameEl.textContent = opts.attackerName;
+    defenderNameEl.textContent = opts.defenderName;
     overlay.classList.remove("hidden");
     doneCallback = opts.onDone || null;
 
-    // kurze Verzögerung, damit das Overlay sichtbar ist bevor die Animation losgeht
     requestAnimationFrame(function () {
-      arena.classList.add("brawling");
-      impactTimer = setInterval(spawnImpact, IMPACT_INTERVAL);
+      scene.classList.add("slapping");
+      spawnImpact(68, 20);
+      var slapInterval = setInterval(function () {
+        spawnImpact(68, 20);
+      }, SLAP_CYCLE_MS);
+      timers.push(slapInterval);
 
-      resolveTimer = setTimeout(function () {
-        clearInterval(impactTimer);
-        impactTimer = null;
-        arena.classList.remove("brawling");
+      var resolveTimer = setTimeout(function () {
+        clearInterval(slapInterval);
+        scene.classList.remove("slapping");
 
-        var winnerEl = opts.winnerIsLeft ? leftFighter : rightFighter;
-        var loserEl = opts.winnerIsLeft ? rightFighter : leftFighter;
-        winnerEl.classList.add("is-winner");
-        loserEl.classList.add("is-loser");
-
-        resultEl.textContent = "🏆 " + (opts.winnerIsLeft ? opts.leftName : opts.rightName) + " gewinnt!";
-        resultEl.classList.remove("hidden");
-        closeBtn.classList.remove("hidden");
-      }, BRAWL_DURATION);
+        if (opts.attackerWins) {
+          finishFight(defenderEl, opts);
+        } else {
+          scene.classList.add("kicking");
+          spawnImpact(33, 65);
+          var kickTimer = setTimeout(function () {
+            scene.classList.remove("kicking");
+            finishFight(attackerEl, opts);
+          }, KICK_MS);
+          timers.push(kickTimer);
+        }
+      }, SLAP_CYCLE_MS * SLAP_COUNT);
+      timers.push(resolveTimer);
     });
   }
 

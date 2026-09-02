@@ -1,4 +1,4 @@
-var CACHE_NAME = "pushup-cache-v4";
+var CACHE_NAME = "pushup-cache-v5";
 var ASSETS = [
   "./",
   "./index.html",

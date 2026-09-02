@@ -50,6 +50,8 @@
     var listEl = document.getElementById("leaderboard-list");
     var copyToast = document.getElementById("copy-toast");
     var tauntStatusEl = document.getElementById("taunt-status");
+    var btnInjury = document.getElementById("btn-injury-toggle");
+    var injuryBtnText = document.getElementById("injury-btn-text");
 
     var seenFights = loadSeenFights();
     var incomingQueue = [];
@@ -102,15 +104,27 @@
         : "⚔️ Diese Woche schon 2x angepöbelt – ab Sonntag wieder frei";
     }
 
+    function renderInjuryButton() {
+      var injured = cloud.isInjured();
+      btnInjury.classList.toggle("is-active", injured);
+      injuryBtnText.textContent = injured
+        ? "Wieder fit melden"
+        : "Verletzungspause nehmen";
+    }
+
+    btnInjury.addEventListener("click", function () {
+      cloud.setInjured(!cloud.isInjured()).then(renderInjuryButton);
+    });
+
     // Alle wartenden Kämpfe (eigene + eingehende) nacheinander abspielen.
     function playNext() {
       if (battlePlaying || incomingQueue.length === 0) return;
       battlePlaying = true;
       var job = incomingQueue.shift();
       battle.play({
-        leftName: job.leftName,
-        rightName: job.rightName,
-        winnerIsLeft: job.winnerIsLeft,
+        attackerName: job.attackerName,
+        defenderName: job.defenderName,
+        attackerWins: job.attackerWins,
         onDone: function () {
           battlePlaying = false;
           renderTauntStatus();
@@ -120,6 +134,14 @@
     }
 
     function startChallenge(opponent, btnEl) {
+      if (cloud.isInjured()) {
+        showError("Du bist gerade in der Verletzungspause und kannst nicht anpöbeln.");
+        return;
+      }
+      if (opponent.injured) {
+        showError(opponent.name + " ist gerade verletzt und kann nicht angepöbelt werden.");
+        return;
+      }
       if (cloud.getTauntsRemaining() <= 0) {
         showError("Diese Woche hast du schon 2x angepöbelt. Ab Sonntag wieder frei!");
         return;
@@ -131,9 +153,9 @@
         seenFights.push(result.id);
         saveSeenFights(seenFights);
         incomingQueue.push({
-          leftName: result.me.name + " (Du)",
-          rightName: result.opponent.name,
-          winnerIsLeft: result.winnerUid === result.me.uid
+          attackerName: result.me.name + " (Du)",
+          defenderName: result.opponent.name,
+          attackerWins: result.winnerUid === result.me.uid
         });
         playNext();
       }).catch(function () {
@@ -153,6 +175,7 @@
       }
 
       renderTauntStatus();
+      renderInjuryButton();
 
       var me = null;
       players.forEach(function (p) { if (p.isMe) me = p; });
@@ -174,10 +197,11 @@
       }
 
       var records = tallyFights(lastFights);
+      var myInjured = me ? me.injured : false;
 
       players.forEach(function (p, idx) {
         var row = document.createElement("div");
-        row.className = "leaderboard-row" + (p.isMe ? " is-me" : "");
+        row.className = "leaderboard-row" + (p.isMe ? " is-me" : "") + (p.injured ? " is-injured" : "");
 
         var rank = document.createElement("div");
         rank.className = "leaderboard-rank";
@@ -190,6 +214,14 @@
         row.appendChild(rank);
         row.appendChild(name);
 
+        if (p.injured) {
+          var injuryBadge = document.createElement("div");
+          injuryBadge.className = "leaderboard-injury-badge";
+          injuryBadge.textContent = "✚";
+          injuryBadge.title = "Verletzungspause";
+          row.appendChild(injuryBadge);
+        }
+
         var rec = records[p.uid];
         if (rec) {
           var recordEl = document.createElement("div");
@@ -199,7 +231,7 @@
           row.appendChild(recordEl);
         }
 
-        if (!p.isMe) {
+        if (!p.isMe && !p.injured && !myInjured) {
           var challengeBtn = document.createElement("button");
           challengeBtn.className = "challenge-btn";
           challengeBtn.textContent = "⚔️";
@@ -276,9 +308,9 @@
         var isRecent = (Date.now() - f.createdAtMs) < (2 * 60 * 60 * 1000);
         if (isRecent && f.opponentUid === myUid && f.challengerUid !== myUid) {
           incomingQueue.push({
-            leftName: f.opponentName + " (Du)",
-            rightName: f.challengerName + " hat dich angepöbelt!",
-            winnerIsLeft: f.winnerUid === myUid
+            attackerName: f.challengerName + " hat dich angepöbelt!",
+            defenderName: f.opponentName + " (Du)",
+            attackerWins: f.winnerUid === f.challengerUid
           });
         }
       });
@@ -293,6 +325,7 @@
     if (cloud.hasGroup()) {
       showBoard();
       cloud.syncTotal(appApi.getTotal());
+      renderInjuryButton();
     } else {
       showJoin();
     }

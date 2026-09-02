@@ -44,10 +44,10 @@
       <line x1="100" y1="150" x2="120" y2="212" class="stick-line"/>
       <line x1="100" y1="70" x2="100" y2="150" class="stick-line"/>
 
-      <polyline points="100,90 70,120 88,74" class="stick-line arm-left"/>
-      <polyline points="100,90 130,120 112,74" class="stick-line arm-right"/>
-      <circle cx="85" cy="105" r="9" class="bicep bicep-left"/>
-      <circle cx="115" cy="105" r="9" class="bicep bicep-right"/>
+      <polyline points="100,90 58,82 68,40" class="stick-line"/>
+      <path d="M96,84 Q75,60 62,78" class="bicep-curve bicep-left"/>
+      <polyline points="100,90 142,82 132,40" class="stick-line"/>
+      <path d="M104,84 Q125,60 138,78" class="bicep-curve bicep-right"/>
 
       <circle cx="100" cy="48" r="22" class="stick-head"/>
 
@@ -163,6 +163,11 @@
       <button id="btn-copy-code" class="copy-btn">Kopieren</button>
     </div>
 
+    <button id="btn-injury-toggle" class="injury-btn">
+      <span class="injury-icon">✚</span>
+      <span id="injury-btn-text">Verletzungspause nehmen</span>
+    </button>
+
     <div id="leaderboard-lead" class="leaderboard-lead"></div>
 
     <div id="taunt-status" class="taunt-status"></div>
@@ -175,46 +180,62 @@
 
 <div id="battle-overlay" class="battle-overlay hidden">
   <div class="battle-names">
-    <span id="battle-left-name"></span>
-    <span class="battle-vs">VS</span>
-    <span id="battle-right-name"></span>
+    <span id="battle-attacker-name"></span>
+    <span class="battle-vs">⚔️</span>
+    <span id="battle-defender-name"></span>
   </div>
   <div class="battle-arena">
-    <svg id="battle-left" class="fighter" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
-      <line x1="100" y1="150" x2="80" y2="212" class="stick-line"/>
-      <line x1="100" y1="150" x2="120" y2="212" class="stick-line"/>
-      <line x1="100" y1="70" x2="100" y2="150" class="stick-line"/>
-      <g class="fighter-arm fighter-arm-back">
-        <polyline points="100,90 70,120 88,74" class="stick-line"/>
-        <circle cx="85" cy="105" r="9" class="bicep"/>
+    <svg id="battle-svg" class="battle-scene" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
+      <g id="fighter-attacker" class="fighter-group">
+        <line x1="100" y1="150" x2="80" y2="212" class="stick-line"/>
+        <line x1="100" y1="150" x2="120" y2="212" class="stick-line"/>
+        <line x1="100" y1="70" x2="100" y2="150" class="stick-line"/>
+
+        <polyline points="100,90 75,100 85,70" class="stick-line"/>
+        <path d="M88,95 Q77,82 88,72" class="bicep-curve"/>
+
+        <g class="slap-arm">
+          <polyline points="100,90 185,80 270,50" class="stick-line"/>
+          <path d="M118,86 Q135,68 152,80" class="bicep-curve"/>
+        </g>
+
+        <circle cx="100" cy="48" r="22" class="stick-head"/>
+        <g class="buddy-eyes"><circle cx="92" cy="46" r="2.4"/><circle cx="108" cy="46" r="2.4"/></g>
+        <path d="M84,32 L98,38" class="brow"/>
+        <path d="M102,38 L116,32" class="brow"/>
+        <path d="M87,60 Q100,52 113,60" class="mouth"/>
+
+        <g class="surrender-flag">
+          <line x1="85" y1="70" x2="85" y2="42" class="flag-pole"/>
+          <path d="M85,42 L107,48 L85,56 Z" class="flag-cloth"/>
+        </g>
       </g>
-      <g class="fighter-arm fighter-arm-front">
-        <polyline points="100,90 130,120 112,74" class="stick-line"/>
-        <circle cx="115" cy="105" r="9" class="bicep"/>
+
+      <g id="fighter-defender" class="fighter-group">
+        <line x1="300" y1="150" x2="320" y2="212" class="stick-line"/>
+        <g class="kick-leg">
+          <line x1="300" y1="150" x2="280" y2="212" class="stick-line"/>
+        </g>
+        <line x1="300" y1="70" x2="300" y2="150" class="stick-line"/>
+
+        <polyline points="300,90 325,100 315,70" class="stick-line"/>
+        <path d="M312,95 Q323,82 312,72" class="bicep-curve"/>
+        <polyline points="300,90 280,85 290,60" class="stick-line"/>
+        <path d="M285,85 Q270,68 288,78" class="bicep-curve"/>
+
+        <g class="defender-head-group">
+          <circle cx="300" cy="48" r="22" class="stick-head"/>
+          <g class="buddy-eyes"><circle cx="292" cy="46" r="2.4"/><circle cx="308" cy="46" r="2.4"/></g>
+          <path d="M284,32 L298,38" class="brow"/>
+          <path d="M302,38 L316,32" class="brow"/>
+          <path d="M287,60 Q300,52 313,60" class="mouth"/>
+        </g>
+
+        <g class="surrender-flag">
+          <line x1="315" y1="70" x2="315" y2="42" class="flag-pole"/>
+          <path d="M315,42 L293,48 L315,56 Z" class="flag-cloth"/>
+        </g>
       </g>
-      <circle cx="100" cy="48" r="22" class="stick-head"/>
-      <g class="buddy-eyes"><circle cx="92" cy="46" r="2.4"/><circle cx="108" cy="46" r="2.4"/></g>
-      <path d="M84,32 L98,38" class="brow"/>
-      <path d="M102,38 L116,32" class="brow"/>
-      <path d="M87,60 Q100,52 113,60" class="mouth"/>
-    </svg>
-    <svg id="battle-right" class="fighter fighter-mirrored" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
-      <line x1="100" y1="150" x2="80" y2="212" class="stick-line"/>
-      <line x1="100" y1="150" x2="120" y2="212" class="stick-line"/>
-      <line x1="100" y1="70" x2="100" y2="150" class="stick-line"/>
-      <g class="fighter-arm fighter-arm-back">
-        <polyline points="100,90 70,120 88,74" class="stick-line"/>
-        <circle cx="85" cy="105" r="9" class="bicep"/>
-      </g>
-      <g class="fighter-arm fighter-arm-front">
-        <polyline points="100,90 130,120 112,74" class="stick-line"/>
-        <circle cx="115" cy="105" r="9" class="bicep"/>
-      </g>
-      <circle cx="100" cy="48" r="22" class="stick-head"/>
-      <g class="buddy-eyes"><circle cx="92" cy="46" r="2.4"/><circle cx="108" cy="46" r="2.4"/></g>
-      <path d="M84,32 L98,38" class="brow"/>
-      <path d="M102,38 L116,32" class="brow"/>
-      <path d="M87,60 Q100,52 113,60" class="mouth"/>
     </svg>
     <div id="battle-impact" class="battle-impact"></div>
   </div>

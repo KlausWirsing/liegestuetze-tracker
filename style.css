@@ -162,11 +162,12 @@ button {
   stroke-width: 5;
   fill: none;
 }
-.bicep {
-  fill: var(--accent);
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 0.35s ease;
+.bicep-curve {
+  stroke: var(--accent);
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 3;
+  transition: stroke-width 0.35s ease;
 }
 .buddy-eyes circle { fill: var(--text); }
 .brow { stroke: var(--text); stroke-width: 3; fill: none; stroke-linecap: round; }
@@ -177,12 +178,12 @@ button {
 .buddy[data-mood="neutral"] .mood-neutral { display: inline; }
 .buddy[data-mood="angry"] .mood-angry { display: inline; }
 
-.buddy[data-muscle="0"] .bicep { transform: scale(0.55); }
-.buddy[data-muscle="1"] .bicep { transform: scale(0.75); }
-.buddy[data-muscle="2"] .bicep { transform: scale(0.95); }
-.buddy[data-muscle="3"] .bicep { transform: scale(1.18); }
-.buddy[data-muscle="4"] .bicep { transform: scale(1.4); }
-.buddy[data-muscle="5"] .bicep { transform: scale(1.65); }
+.buddy[data-muscle="0"] .bicep-curve { stroke-width: 0; }
+.buddy[data-muscle="1"] .bicep-curve { stroke-width: 2; }
+.buddy[data-muscle="2"] .bicep-curve { stroke-width: 3.5; }
+.buddy[data-muscle="3"] .bicep-curve { stroke-width: 5; }
+.buddy[data-muscle="4"] .bicep-curve { stroke-width: 6.5; }
+.buddy[data-muscle="5"] .bicep-curve { stroke-width: 8; }
 
 @keyframes buddy-cheer-bounce {
   0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -290,10 +291,38 @@ button {
   margin-right: 4px;
 }
 
+.injury-btn {
+  width: 100%;
+  margin-top: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  border-radius: 12px;
+  padding: 11px 0;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.injury-btn:active { background: rgba(220, 38, 38, 0.1); }
+.injury-btn.is-active {
+  background: var(--danger);
+  color: #fff;
+}
+.injury-icon { font-size: 16px; }
+
+.leaderboard-row.is-injured { opacity: 0.6; }
+.leaderboard-injury-badge {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
 .battle-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   z-index: 60;
   display: flex;
   flex-direction: column;
@@ -303,72 +332,76 @@ button {
 }
 .battle-names {
   color: #fff;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 10px;
   text-align: center;
 }
-.battle-vs { color: var(--accent); font-size: 13px; }
+.battle-vs { font-size: 15px; }
 .battle-arena {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0;
   width: 100%;
-  max-width: 360px;
-  height: 220px;
+  max-width: 420px;
 }
-.fighter {
-  width: 45%;
-  height: 100%;
+.battle-scene {
+  width: 100%;
+  height: auto;
+  overflow: visible;
 }
-.fighter .stick-line, .fighter .stick-head { stroke: #fff; }
-.fighter .brow, .fighter .mouth, .fighter .buddy-eyes circle { stroke: #fff; fill: #fff; }
-.fighter .bicep { fill: var(--accent); }
-.fighter-mirrored { transform: scaleX(-1); }
+.battle-scene .stick-line, .battle-scene .stick-head { stroke: #fff; }
+.battle-scene .brow, .battle-scene .mouth, .battle-scene .buddy-eyes circle { stroke: #fff; fill: #fff; }
+.battle-scene .bicep-curve { stroke: var(--accent); stroke-width: 4; }
 
-.fighter-arm { transform-box: view-box; transform-origin: 100px 90px; }
+.slap-arm {
+  transform-box: view-box;
+  transform-origin: 100px 90px;
+  transform: rotate(-70deg);
+  transition: transform 0.3s ease;
+}
+.kick-leg { transform-box: view-box; transform-origin: 300px 150px; }
+.defender-head-group { transform-box: view-box; transform-origin: 300px 70px; }
 
-.battle-arena.brawling #battle-left .fighter-arm-front {
-  animation: punch-swing 0.55s ease-in-out infinite;
+.battle-scene.slapping .slap-arm {
+  animation: slap-swing 1.6s ease-in-out infinite;
 }
-.battle-arena.brawling #battle-right .fighter-arm-front {
-  animation: punch-swing 0.55s ease-in-out infinite;
-  animation-delay: 0.275s;
+@keyframes slap-swing {
+  0%, 20%, 100% { transform: rotate(-70deg); }
+  45% { transform: rotate(2deg); }
+  60% { transform: rotate(-15deg); }
 }
-@keyframes punch-swing {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-45deg); }
+
+.fighter-group.is-winner .slap-arm {
+  animation: victory-pump 0.5s ease-in-out 3 !important;
 }
-.battle-arena.brawling #battle-left {
-  animation: lean-fwd 0.55s ease-in-out infinite;
+@keyframes victory-pump {
+  0%, 100% { transform: rotate(-140deg); }
+  50% { transform: rotate(-160deg); }
 }
-.battle-arena.brawling #battle-right {
-  animation: lean-fwd 0.55s ease-in-out infinite;
-  animation-delay: 0.275s;
+.battle-scene.slapping .defender-head-group {
+  animation: head-recoil 1.6s ease-in-out infinite;
 }
-@keyframes lean-fwd {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(6px); }
+@keyframes head-recoil {
+  0%, 38%, 100% { transform: rotate(0deg); }
+  46% { transform: rotate(16deg); }
+  56% { transform: rotate(-5deg); }
 }
-.battle-arena.brawling #battle-right.fighter-mirrored {
-  animation-name: lean-fwd-mirrored;
+
+.battle-scene.kicking .kick-leg {
+  animation: kick-swing 0.6s ease-out 1;
 }
-@keyframes lean-fwd-mirrored {
-  0%, 100% { transform: scaleX(-1) translateX(0); }
-  50% { transform: scaleX(-1) translateX(6px); }
+@keyframes kick-swing {
+  0% { transform: rotate(0deg); }
+  45% { transform: rotate(-115deg); }
+  100% { transform: rotate(0deg); }
 }
 
 .impact-star {
   position: absolute;
-  top: 40%;
-  left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 28px;
+  font-size: 26px;
   animation: impact-pop 0.4s ease-out forwards;
   pointer-events: none;
 }
@@ -378,32 +411,34 @@ button {
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
 }
 
-.fighter.is-winner .fighter-arm {
-  animation: none !important;
-  transform: rotate(150deg) !important;
-  transition: transform 0.4s ease;
-}
-.fighter.is-winner {
-  animation: winner-bounce 0.5s ease-in-out 3 !important;
-}
-@keyframes winner-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-.fighter.is-winner.fighter-mirrored { animation-name: winner-bounce-mirrored !important; }
-@keyframes winner-bounce-mirrored {
-  0%, 100% { transform: scaleX(-1) translateY(0); }
-  50% { transform: scaleX(-1) translateY(-10px); }
-}
+.surrender-flag { opacity: 0; }
+.flag-pole { stroke: #fff; stroke-width: 3; }
+.flag-cloth { fill: #fff; }
 
-.fighter.is-loser {
+.fighter-group.is-defeated .surrender-flag { opacity: 1; }
+.fighter-group.is-defeated .slap-arm,
+.fighter-group.is-defeated .kick-leg,
+.fighter-group.is-defeated .defender-head-group {
   animation: none !important;
-  transform: rotate(75deg) translateY(30px) !important;
-  opacity: 0.55;
+}
+#fighter-attacker {
+  transform-box: view-box;
+  transform-origin: 100px 150px;
   transition: transform 0.5s ease, opacity 0.5s ease;
 }
-.fighter.is-loser.fighter-mirrored { transform: scaleX(-1) rotate(-75deg) translateY(30px) !important; }
-.fighter.is-loser .fighter-arm { animation: none !important; }
+#fighter-defender {
+  transform-box: view-box;
+  transform-origin: 300px 150px;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+#fighter-attacker.is-defeated { transform: translate(0, 55px) rotate(85deg); opacity: 0.6; }
+#fighter-defender.is-defeated { transform: translate(0, 55px) rotate(-85deg); opacity: 0.6; }
+
+.fighter-group.is-winner { animation: victory-bounce 0.5s ease-in-out 3; }
+@keyframes victory-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
 
 .battle-result {
   color: #fff;

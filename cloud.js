@@ -22,6 +22,7 @@ import {
 
   var STORAGE_CODE = "pushup_group_code_v1";
   var STORAGE_NAME = "pushup_display_name_v1";
+  var STORAGE_INJURED = "pushup_injured_v1";
   var CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // ohne 0/O/1/I/L zur besseren Lesbarkeit
   var TAUNTS_PER_WEEK = 2;
 
@@ -57,6 +58,10 @@ import {
     return localStorage.getItem(STORAGE_NAME) || "";
   }
 
+  function isInjured() {
+    return localStorage.getItem(STORAGE_INJURED) === "1";
+  }
+
   // Woche = Sonntag bis Sonntag
   function weekKeyFor(date) {
     var d = new Date(date);
@@ -85,6 +90,7 @@ import {
           mood: data.mood || "neutral",
           tauntWeekKey: data.tauntWeekKey || "",
           tauntCount: typeof data.tauntCount === "number" ? data.tauntCount : 0,
+          injured: !!data.injured,
           isMe: docSnap.id === uid
         });
       });
@@ -145,6 +151,7 @@ import {
       extra.muscleLevel = window.PushupBuddy.getMuscleLevel();
       extra.mood = window.PushupBuddy.getMood();
     }
+    extra.injured = isInjured();
     return extra;
   }
 
@@ -180,6 +187,14 @@ import {
     getGroupCode: getGroupCode,
     getDisplayName: getDisplayName,
     hasGroup: function () { return !!getGroupCode(); },
+
+    isInjured: isInjured,
+    setInjured: function (injured) {
+      localStorage.setItem(STORAGE_INJURED, injured ? "1" : "0");
+      var code = getGroupCode();
+      if (code) return writeSelf(code, getDisplayName(), lastSelfTotal, currentStatsExtra());
+      return Promise.resolve();
+    },
 
     createGroup: function (name, currentTotal) {
       var code = generateCode();
@@ -257,6 +272,8 @@ import {
         if (lastLeaderboard[i].uid === opponentUid) opponent = lastLeaderboard[i];
       }
       if (!me || !opponent) return Promise.reject(new Error("player-not-found"));
+      if (me.injured) return Promise.reject(new Error("self-injured"));
+      if (opponent.injured) return Promise.reject(new Error("opponent-injured"));
 
       function strength(p) {
         var moodBonus = p.mood === "happy" ? 6 : (p.mood === "angry" ? -6 : 0);
