@@ -871,13 +871,21 @@ button {
 }
 .copy-btn:active { background: var(--accent); color: #fff; }
 
+.ranking-block {
+  margin-top: 18px;
+}
+.ranking-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
 .leaderboard-lead {
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-muted);
-  margin: 16px 0 10px;
-  min-height: 20px;
+  margin: 0 0 8px;
+  min-height: 18px;
 }
 
 .leaderboard-list {

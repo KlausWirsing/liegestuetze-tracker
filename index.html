@@ -238,10 +238,7 @@
     <div id="buddy-caption" class="buddy-caption">Los geht's – dein Buddy wartet!</div>
   </section>
 
-  <section class="total-card">
-    <div class="total-label">Gesamt-Punkte</div>
-    <div id="combined-total-count" class="total-number">0</div>
-  </section>
+  <p class="section-hint" style="text-align:center;">Jede Übung zählt für sich – hier nur der Überblick, keine Vermischung.</p>
 
   <section class="breakdown-grid">
     <div class="stat-box"><div class="stat-value" id="breakdown-pushups">0</div><div class="stat-label">Liegestütze</div></div>
@@ -249,44 +246,19 @@
     <div class="stat-box"><div class="stat-value" id="breakdown-plank">0:00</div><div class="stat-label">Plank</div></div>
   </section>
 
-  <section class="stats-grid">
-    <div class="stat-box"><div class="stat-value" id="combined-stat-today">0</div><div class="stat-label">Heute</div></div>
-    <div class="stat-box"><div class="stat-value" id="combined-stat-week">0</div><div class="stat-label">Diese Woche</div></div>
-    <div class="stat-box"><div class="stat-value" id="combined-stat-month">0</div><div class="stat-label">Dieser Monat</div></div>
-    <div class="stat-box"><div class="stat-value" id="combined-stat-total">0</div><div class="stat-label">Gesamt</div></div>
-  </section>
-
   <section class="streak-card">
     <div class="streak-flame">🔥</div>
     <div>
       <div id="combined-streak-value" class="streak-value">0 Tage</div>
-      <div class="streak-label">aktuelle Streak</div>
+      <div class="streak-label">Tage in Folge mit mind. einem Training</div>
     </div>
   </section>
-
-  <section class="chart-card">
-    <div class="chart-header">
-      <span>Tagesverlauf (Punkte)</span>
-      <div class="range-toggle">
-        <button class="range-btn active" data-exercise="combined" data-range="7">7 Tage</button>
-        <button class="range-btn" data-exercise="combined" data-range="30">30 Tage</button>
-      </div>
-    </div>
-    <div id="combined-chart" class="chart"></div>
-  </section>
-
-  <section class="avg-grid">
-    <div class="stat-box"><div class="stat-value" id="combined-avg-total">0</div><div class="stat-label">Ø Punkte/Tag (gesamt)</div></div>
-    <div class="stat-box"><div class="stat-value" id="combined-avg-week">0</div><div class="stat-label">Ø letzte 7 Tage</div></div>
-  </section>
-
-  <p class="points-hint">1 Liegestütze = 1 Punkt · 1 Squat = 1 Punkt · 2 Sek. Plank = 1 Punkt</p>
 </main>
 
 <main id="view-group" class="view hidden">
   <section id="group-join-card" class="join-card">
     <h2 class="section-title">Mit Freunden vergleichen</h2>
-    <p class="section-hint">Erstelle eine Gruppe oder tritt mit einem Code bei, um live zu sehen, wer vorne liegt (kombinierte Punkte aus allen drei Übungen).</p>
+    <p class="section-hint">Erstelle eine Gruppe oder tritt mit einem Code bei, um live zu sehen, wer bei Liegestütze, Plank und Squats jeweils vorne liegt.</p>
 
     <label class="field-label" for="input-name">Dein Name</label>
     <input id="input-name" class="text-input" type="text" maxlength="24" placeholder="z. B. Max" autocomplete="off">
@@ -316,11 +288,29 @@
       <span id="injury-btn-text">Verletzungspause nehmen</span>
     </button>
 
-    <div id="leaderboard-lead" class="leaderboard-lead"></div>
+    <div class="ranking-block">
+      <div class="ranking-title">💪 Liegestütze</div>
+      <div id="lead-pushups" class="leaderboard-lead"></div>
+      <div id="ranking-pushups" class="leaderboard-list"></div>
+    </div>
 
-    <div id="taunt-status" class="taunt-status"></div>
+    <div class="ranking-block">
+      <div class="ranking-title">⏱️ Plank</div>
+      <div id="lead-plank" class="leaderboard-lead"></div>
+      <div id="ranking-plank" class="leaderboard-list"></div>
+    </div>
 
-    <div id="leaderboard-list" class="leaderboard-list"></div>
+    <div class="ranking-block">
+      <div class="ranking-title">🦵 Squats</div>
+      <div id="lead-squats" class="leaderboard-lead"></div>
+      <div id="ranking-squats" class="leaderboard-list"></div>
+    </div>
+
+    <div class="ranking-block">
+      <div class="ranking-title">⚔️ Anpöbeln &amp; Kämpfe</div>
+      <div id="taunt-status" class="taunt-status"></div>
+      <div id="fight-list" class="leaderboard-list"></div>
+    </div>
 
     <button id="btn-leave-group" class="text-btn">Gruppe verlassen</button>
   </section>

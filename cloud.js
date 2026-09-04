@@ -36,7 +36,6 @@ import {
   var lastLeaderboard = [];
   var lastFights = [];
   var isReady = false;
-  var lastSelfTotal = 0;
 
   function generateCode() {
     var code = "";
@@ -83,9 +82,12 @@ import {
         players.push({
           uid: docSnap.id,
           name: data.name || "?",
-          total: typeof data.total === "number" ? data.total : 0,
-          todayTotal: typeof data.todayTotal === "number" ? data.todayTotal : 0,
-          todayDate: data.todayDate || "",
+          pushupsTotal: data.pushupsTotal || 0,
+          pushupsToday: data.pushupsToday || 0,
+          squatsTotal: data.squatsTotal || 0,
+          squatsToday: data.squatsToday || 0,
+          plankTotal: data.plankTotal || 0,
+          plankToday: data.plankToday || 0,
           muscleLevel: typeof data.muscleLevel === "number" ? data.muscleLevel : 2,
           mood: data.mood || "neutral",
           tauntWeekKey: data.tauntWeekKey || "",
@@ -94,7 +96,6 @@ import {
           isMe: docSnap.id === uid
         });
       });
-      players.sort(function (a, b) { return b.total - a.total; });
       lastLeaderboard = players;
       leaderboardCallbacks.forEach(function (cb) { cb(players); });
     }, function () {
@@ -126,12 +127,11 @@ import {
     });
   }
 
-  function writeSelf(code, name, total, extra) {
+  function writeSelf(code, name, extra) {
     if (!db || !uid || !code) return Promise.resolve();
     var ref = doc(db, "groups", code, "players", uid);
     var payload = {
       name: (name || "Ich").slice(0, 24),
-      total: Math.max(0, Math.floor(total || 0)),
       updatedAt: serverTimestamp()
     };
     if (extra) {
@@ -140,12 +140,20 @@ import {
     return setDoc(ref, payload, { merge: true });
   }
 
-  function currentStatsExtra() {
+  // Rohwerte je Übung (keine Umrechnung!) fürs Speichern/Anzeigen.
+  function exerciseStatsExtra() {
     var extra = {};
-    if (window.PushupCombined) {
-      extra.todayTotal = Math.round(window.PushupCombined.getTodayTotal());
-      var d = new Date();
-      extra.todayDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    if (window.PushupApp) {
+      extra.pushupsTotal = Math.floor(window.PushupApp.getTotal());
+      extra.pushupsToday = Math.floor(window.PushupApp.getTodayTotal());
+    }
+    if (window.SquatsApp) {
+      extra.squatsTotal = Math.floor(window.SquatsApp.getTotal());
+      extra.squatsToday = Math.floor(window.SquatsApp.getTodayTotal());
+    }
+    if (window.PlankApp) {
+      extra.plankTotal = Math.floor(window.PlankApp.getTotal());
+      extra.plankToday = Math.floor(window.PlankApp.getTodayTotal());
     }
     if (window.PushupBuddy) {
       extra.muscleLevel = window.PushupBuddy.getMuscleLevel();
@@ -178,6 +186,17 @@ import {
     signInAnonymously(auth).catch(function () {});
   }
 
+  // Nur intern für den Kampfausgang: eine kombinierte "Stärke" aus allen drei
+  // Übungen. Wird nirgendwo als Nutzer-sichtbare Zahl angezeigt.
+  function battleStrength(p) {
+    var moodBonus = p.mood === "happy" ? 6 : (p.mood === "angry" ? -6 : 0);
+    var todayScore = (p.pushupsToday || 0) + (p.squatsToday || 0) + (p.plankToday || 0) * 0.5;
+    var totalScore = Math.min(p.pushupsTotal || 0, 5000) * 0.02
+      + Math.min(p.squatsTotal || 0, 5000) * 0.02
+      + Math.min(p.plankTotal || 0, 5000) * 0.01;
+    return todayScore * 1.5 + totalScore + (p.muscleLevel || 2) * 6 + moodBonus + (Math.random() * 16 - 8);
+  }
+
   var api = {
     onReady: function (cb) {
       if (isReady) cb(uid);
@@ -192,25 +211,25 @@ import {
     setInjured: function (injured) {
       localStorage.setItem(STORAGE_INJURED, injured ? "1" : "0");
       var code = getGroupCode();
-      if (code) return writeSelf(code, getDisplayName(), lastSelfTotal, currentStatsExtra());
+      if (code) return writeSelf(code, getDisplayName(), exerciseStatsExtra());
       return Promise.resolve();
     },
 
-    createGroup: function (name, currentTotal) {
+    createGroup: function (name) {
       var code = generateCode();
       localStorage.setItem(STORAGE_CODE, code);
       localStorage.setItem(STORAGE_NAME, name || "Ich");
       subscribeToGroup(code);
-      return writeSelf(code, name, currentTotal, currentStatsExtra()).then(function () { return code; });
+      return writeSelf(code, name, exerciseStatsExtra()).then(function () { return code; });
     },
 
-    joinGroup: function (code, name, currentTotal) {
+    joinGroup: function (code, name) {
       var normalized = normalizeCode(code);
       if (!normalized) return Promise.reject(new Error("invalid-code"));
       localStorage.setItem(STORAGE_CODE, normalized);
       localStorage.setItem(STORAGE_NAME, name || "Ich");
       subscribeToGroup(normalized);
-      return writeSelf(normalized, name, currentTotal, currentStatsExtra()).then(function () { return normalized; });
+      return writeSelf(normalized, name, exerciseStatsExtra()).then(function () { return normalized; });
     },
 
     leaveGroup: function () {
@@ -226,15 +245,15 @@ import {
     renameSelf: function (name) {
       localStorage.setItem(STORAGE_NAME, name || "Ich");
       var code = getGroupCode();
-      if (code) return writeSelf(code, name, lastSelfTotal, currentStatsExtra());
+      if (code) return writeSelf(code, name, exerciseStatsExtra());
       return Promise.resolve();
     },
 
-    syncTotal: function (total) {
-      lastSelfTotal = total;
+    // Bei jeder Änderung an einer der drei Übungen aufrufen.
+    syncAll: function () {
       var code = getGroupCode();
       if (!code || !isReady) return Promise.resolve();
-      return writeSelf(code, getDisplayName(), total, currentStatsExtra());
+      return writeSelf(code, getDisplayName(), exerciseStatsExtra());
     },
 
     onLeaderboard: function (cb) {
@@ -275,23 +294,14 @@ import {
       if (me.injured) return Promise.reject(new Error("self-injured"));
       if (opponent.injured) return Promise.reject(new Error("opponent-injured"));
 
-      function strength(p) {
-        var moodBonus = p.mood === "happy" ? 6 : (p.mood === "angry" ? -6 : 0);
-        return (p.todayTotal || 0) * 1.5
-          + Math.min(p.total, 5000) * 0.02
-          + (p.muscleLevel || 2) * 6
-          + moodBonus
-          + (Math.random() * 16 - 8);
-      }
-
-      var myScore = strength(me);
-      var oppScore = strength(opponent);
+      var myScore = battleStrength(me);
+      var oppScore = battleStrength(opponent);
       var winner = myScore >= oppScore ? me : opponent;
 
       var wk = weekKeyFor(new Date());
       var newCount = (me.tauntWeekKey === wk ? me.tauntCount : 0) + 1;
 
-      return writeSelf(code, getDisplayName(), lastSelfTotal, {
+      return writeSelf(code, getDisplayName(), {
         tauntWeekKey: wk,
         tauntCount: newCount
       }).then(function () {

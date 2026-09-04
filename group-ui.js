@@ -2,6 +2,7 @@
   "use strict";
 
   var SEEN_FIGHTS_KEY = "pushup_seen_fights_v1";
+  var U = window.ExerciseUtils;
 
   function loadSeenFights() {
     try {
@@ -19,7 +20,7 @@
   function whenReady(fn, onTimeout) {
     var waited = 0;
     function check() {
-      if (window.PushupCombined && window.PushupCloud && window.PushupBattle) {
+      if (window.PushupApp && window.SquatsApp && window.PlankApp && window.PushupCloud && window.PushupBattle) {
         window.PushupCloud.onReady(function () { fn(); });
       } else if (waited > 6000) {
         onTimeout();
@@ -31,9 +32,15 @@
     check();
   }
 
+  // Eine Übungs-Rangliste: welches Feld sortiert, wie wird formatiert.
+  var RANKINGS = [
+    { field: "pushupsTotal", listEl: "ranking-pushups", leadEl: "lead-pushups", fmt: U.fmtInt, unit: "" },
+    { field: "plankTotal", listEl: "ranking-plank", leadEl: "lead-plank", fmt: U.fmtDuration, unit: "" },
+    { field: "squatsTotal", listEl: "ranking-squats", leadEl: "lead-squats", fmt: U.fmtInt, unit: "" }
+  ];
+
   whenReady(function () {
     var cloud = window.PushupCloud;
-    var appApi = window.PushupCombined;
     var battle = window.PushupBattle;
 
     var joinCard = document.getElementById("group-join-card");
@@ -46,12 +53,11 @@
     var codeDisplay = document.getElementById("group-code-display");
     var btnCopy = document.getElementById("btn-copy-code");
     var btnLeave = document.getElementById("btn-leave-group");
-    var leadEl = document.getElementById("leaderboard-lead");
-    var listEl = document.getElementById("leaderboard-list");
     var copyToast = document.getElementById("copy-toast");
     var tauntStatusEl = document.getElementById("taunt-status");
     var btnInjury = document.getElementById("btn-injury-toggle");
     var injuryBtnText = document.getElementById("injury-btn-text");
+    var fightListEl = document.getElementById("fight-list");
 
     var seenFights = loadSeenFights();
     var incomingQueue = [];
@@ -77,10 +83,6 @@
       inputName.value = cloud.getDisplayName() || "";
     }
 
-    function fmt(n) {
-      return Math.round(n).toLocaleString("de-DE");
-    }
-
     function tallyFights(fights) {
       var map = {};
       fights.forEach(function (f) {
@@ -100,23 +102,20 @@
     function renderTauntStatus() {
       var remaining = cloud.getTauntsRemaining();
       tauntStatusEl.textContent = remaining > 0
-        ? "⚔️ Noch " + remaining + "x diese Woche anpöbeln (So–So)"
-        : "⚔️ Diese Woche schon 2x angepöbelt – ab Sonntag wieder frei";
+        ? "Noch " + remaining + "x diese Woche anpöbeln (So–So)"
+        : "Diese Woche schon 2x angepöbelt – ab Sonntag wieder frei";
     }
 
     function renderInjuryButton() {
       var injured = cloud.isInjured();
       btnInjury.classList.toggle("is-active", injured);
-      injuryBtnText.textContent = injured
-        ? "Wieder fit melden"
-        : "Verletzungspause nehmen";
+      injuryBtnText.textContent = injured ? "Wieder fit melden" : "Verletzungspause nehmen";
     }
 
     btnInjury.addEventListener("click", function () {
       cloud.setInjured(!cloud.isInjured()).then(renderInjuryButton);
     });
 
-    // Alle wartenden Kämpfe (eigene + eingehende) nacheinander abspielen.
     function playNext() {
       if (battlePlaying || incomingQueue.length === 0) return;
       battlePlaying = true;
@@ -165,43 +164,34 @@
       });
     }
 
-    function renderLeaderboard(players) {
+    function renderRanking(cfg, players) {
+      var listEl = document.getElementById(cfg.listEl);
+      var leadEl = document.getElementById(cfg.leadEl);
       listEl.innerHTML = "";
 
-      if (players.length === 0) {
-        leadEl.textContent = "Warte auf Daten …";
-        tauntStatusEl.textContent = "";
-        return;
-      }
-
-      renderTauntStatus();
-      renderInjuryButton();
-
+      var sorted = players.slice().sort(function (a, b) { return (b[cfg.field] || 0) - (a[cfg.field] || 0); });
       var me = null;
-      players.forEach(function (p) { if (p.isMe) me = p; });
+      sorted.forEach(function (p) { if (p.isMe) me = p; });
 
-      if (players.length === 1 && me) {
-        leadEl.textContent = "Du bist allein in der Gruppe – lade einen Freund mit dem Code ein!";
-      } else if (me && players[0].isMe) {
-        var second = players[1];
-        var lead = me.total - second.total;
+      if (sorted.length <= 1) {
+        leadEl.textContent = "";
+      } else if (me && sorted[0].isMe) {
+        var second = sorted[1];
+        var lead = (me[cfg.field] || 0) - (second[cfg.field] || 0);
         leadEl.textContent = lead > 0
-          ? "🏆 Du liegst vorne, " + fmt(lead) + " vor " + second.name
-          : "Gleichstand mit " + second.name + "!";
+          ? "🏆 Vorne, " + cfg.fmt(lead) + " vor " + second.name
+          : "Gleichstand mit " + second.name;
       } else if (me) {
-        var leader = players[0];
-        var gap = leader.total - me.total;
-        leadEl.textContent = leader.name + " liegt " + fmt(gap) + " vor dir";
+        var leader = sorted[0];
+        var gap = (leader[cfg.field] || 0) - (me[cfg.field] || 0);
+        leadEl.textContent = leader.name + " liegt " + cfg.fmt(gap) + " vor dir";
       } else {
         leadEl.textContent = "";
       }
 
-      var records = tallyFights(lastFights);
-      var myInjured = me ? me.injured : false;
-
-      players.forEach(function (p, idx) {
+      sorted.forEach(function (p, idx) {
         var row = document.createElement("div");
-        row.className = "leaderboard-row" + (p.isMe ? " is-me" : "") + (p.injured ? " is-injured" : "");
+        row.className = "leaderboard-row" + (p.isMe ? " is-me" : "");
 
         var rank = document.createElement("div");
         rank.className = "leaderboard-rank";
@@ -211,27 +201,53 @@
         name.className = "leaderboard-name";
         name.textContent = p.name + (p.isMe ? " (Du)" : "");
 
+        var total = document.createElement("div");
+        total.className = "leaderboard-total";
+        total.textContent = cfg.fmt(p[cfg.field] || 0);
+
         row.appendChild(rank);
+        row.appendChild(name);
+        row.appendChild(total);
+        listEl.appendChild(row);
+      });
+    }
+
+    function renderFightList(players, fights) {
+      fightListEl.innerHTML = "";
+      var records = tallyFights(fights);
+      var others = players.filter(function (p) { return !p.isMe; });
+
+      if (others.length === 0) {
+        fightListEl.innerHTML = '<p class="section-hint">Noch niemand zum Anpöbeln da – lade einen Freund mit dem Code ein!</p>';
+        return;
+      }
+
+      others.forEach(function (p) {
+        var row = document.createElement("div");
+        row.className = "leaderboard-row" + (p.injured ? " is-injured" : "");
+
+        var name = document.createElement("div");
+        name.className = "leaderboard-name";
+        name.textContent = p.name;
         row.appendChild(name);
 
         if (p.injured) {
-          var injuryBadge = document.createElement("div");
-          injuryBadge.className = "leaderboard-injury-badge";
-          injuryBadge.textContent = "✚";
-          injuryBadge.title = "Verletzungspause";
-          row.appendChild(injuryBadge);
+          var badge = document.createElement("div");
+          badge.className = "leaderboard-injury-badge";
+          badge.textContent = "✚";
+          badge.title = "Verletzungspause";
+          row.appendChild(badge);
         }
 
         var rec = records[p.uid];
-        if (rec) {
-          var recordEl = document.createElement("div");
-          recordEl.className = "leaderboard-record";
-          recordEl.textContent = "🥊" + rec.wins + "/" + rec.losses;
-          recordEl.title = rec.wins + " Siege, " + rec.losses + " Niederlagen";
-          row.appendChild(recordEl);
-        }
+        var recordEl = document.createElement("div");
+        recordEl.className = "leaderboard-record";
+        recordEl.textContent = "🥊" + (rec ? rec.wins : 0) + "/" + (rec ? rec.losses : 0);
+        recordEl.title = (rec ? rec.wins : 0) + " Siege, " + (rec ? rec.losses : 0) + " Niederlagen";
+        row.appendChild(recordEl);
 
-        if (!p.isMe && !p.injured && !myInjured) {
+        var myInjured = cloud.isInjured();
+        if (!p.injured && !myInjured) {
           var challengeBtn = document.createElement("button");
           challengeBtn.className = "challenge-btn";
           challengeBtn.textContent = "⚔️";
@@ -242,20 +258,30 @@
           row.appendChild(challengeBtn);
         }
 
-        var total = document.createElement("div");
-        total.className = "leaderboard-total";
-        total.textContent = fmt(p.total) + " Pkt.";
-        row.appendChild(total);
-
-        listEl.appendChild(row);
+        fightListEl.appendChild(row);
       });
+    }
+
+    function renderAll(players) {
+      if (players.length === 0) {
+        RANKINGS.forEach(function (cfg) {
+          document.getElementById(cfg.listEl).innerHTML = "";
+          document.getElementById(cfg.leadEl).textContent = "Warte auf Daten …";
+        });
+        tauntStatusEl.textContent = "";
+        return;
+      }
+      renderTauntStatus();
+      renderInjuryButton();
+      RANKINGS.forEach(function (cfg) { renderRanking(cfg, players); });
+      renderFightList(players, lastFights);
     }
 
     btnCreate.addEventListener("click", function () {
       var name = inputName.value.trim();
       if (!name) { showError("Bitte gib deinen Namen ein."); return; }
       clearError();
-      cloud.createGroup(name, appApi.getTotal()).then(function () {
+      cloud.createGroup(name).then(function () {
         showBoard();
       }).catch(function () {
         showError("Gruppe konnte nicht erstellt werden. Prüfe deine Internetverbindung.");
@@ -268,7 +294,7 @@
       if (!name) { showError("Bitte gib deinen Namen ein."); return; }
       if (!code) { showError("Bitte gib einen Gruppencode ein."); return; }
       clearError();
-      cloud.joinGroup(code, name, appApi.getTotal()).then(function () {
+      cloud.joinGroup(code, name).then(function () {
         showBoard();
       }).catch(function () {
         showError("Beitritt fehlgeschlagen. Prüfe den Code und deine Internetverbindung.");
@@ -293,11 +319,11 @@
       }
     });
 
-    cloud.onLeaderboard(renderLeaderboard);
+    cloud.onLeaderboard(renderAll);
 
     cloud.onFights(function (fights) {
       lastFights = fights;
-      renderLeaderboard(cloud.getLeaderboardSnapshot());
+      renderAll(cloud.getLeaderboardSnapshot());
 
       var myUid = cloud.getUid();
       var newlySeen = false;
@@ -318,14 +344,16 @@
       playNext();
     });
 
-    appApi.onChange(function (total) {
-      if (cloud.hasGroup()) cloud.syncTotal(total);
-    });
+    function syncIfInGroup() {
+      if (cloud.hasGroup()) cloud.syncAll();
+    }
+    window.PushupApp.onChange(syncIfInGroup);
+    window.SquatsApp.onChange(syncIfInGroup);
+    window.PlankApp.onChange(syncIfInGroup);
 
     if (cloud.hasGroup()) {
       showBoard();
-      cloud.syncTotal(appApi.getTotal());
-      renderInjuryButton();
+      cloud.syncAll();
     } else {
       showJoin();
     }
