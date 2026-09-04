@@ -355,46 +355,84 @@ button {
 .battle-scene .brow, .battle-scene .mouth, .battle-scene .buddy-eyes circle { stroke: #fff; fill: #fff; }
 .battle-scene .bicep-curve { stroke: var(--accent); stroke-width: 4; }
 
-.slap-arm {
+/* Oberkörper des Angreifers: Rumpf, Kopf, Beine, beide Schlagarme drehen
+   sich beim Ausholen/Treffen gemeinsam um die Hüfte. */
+.torso-group { transform-box: view-box; transform-origin: 100px 150px; }
+.torso-group.twisting-a { animation: torso-twist-a 0.71s cubic-bezier(.22,.7,.25,1) 1; }
+.torso-group.twisting-b { animation: torso-twist-b 0.71s cubic-bezier(.22,.7,.25,1) 1; }
+@keyframes torso-twist-a {
+  0% { transform: rotate(0deg); }
+  31% { transform: rotate(-7deg); }
+  50% { transform: rotate(5deg); }
+  63% { transform: rotate(3deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes torso-twist-b {
+  0% { transform: rotate(0deg); }
+  31% { transform: rotate(7deg); }
+  50% { transform: rotate(-5deg); }
+  63% { transform: rotate(-3deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Zwei Schlagarme: liegen in Grundstellung als Deckung vorm eigenen Kopf,
+   abwechselnd holt einer aus und trifft den Gegner im Gesicht. */
+.slap-arm-a, .slap-arm-b {
   transform-box: view-box;
   transform-origin: 100px 90px;
-  transform: rotate(-70deg);
-  transition: transform 0.3s ease;
 }
+.slap-arm-a { transform: rotate(-62deg); }
+.slap-arm-b { transform: rotate(-98deg); }
+.slap-arm-a.swinging { animation: swing-a 0.71s cubic-bezier(.22,.7,.25,1) 1; }
+.slap-arm-b.swinging { animation: swing-b 0.71s cubic-bezier(.22,.7,.25,1) 1; }
+@keyframes swing-a {
+  0% { transform: rotate(-62deg); }
+  31% { transform: rotate(-88deg); }
+  50% { transform: rotate(6deg); }
+  63% { transform: rotate(-9deg); }
+  100% { transform: rotate(-62deg); }
+}
+@keyframes swing-b {
+  0% { transform: rotate(-98deg); }
+  31% { transform: rotate(-124deg); }
+  50% { transform: rotate(6deg); }
+  63% { transform: rotate(-9deg); }
+  100% { transform: rotate(-98deg); }
+}
+
+/* Verteidiger reagiert verzögert auf jeden Treffer: Kopf/Rumpf wird zur
+   Seite gedrückt, hält kurz, kehrt dann zurück. */
+.defender-torso-group { transform-box: view-box; transform-origin: 300px 130px; }
+.defender-torso-group.reacting {
+  animation: defender-recoil 0.55s cubic-bezier(.32,0,.2,1) 1;
+}
+@keyframes defender-recoil {
+  0% { transform: rotate(0deg) translateX(0); }
+  22% { transform: rotate(11deg) translateX(7px); }
+  55% { transform: rotate(11deg) translateX(7px); }
+  100% { transform: rotate(0deg) translateX(0); }
+}
+
+/* Tritt: Hüftrotation des Verteidigers, Bein trifft den Angreifer,
+   der Angreifer zuckt bei Kontakt kurz zurück. */
 .kick-leg { transform-box: view-box; transform-origin: 300px 150px; }
-.defender-head-group { transform-box: view-box; transform-origin: 300px 70px; }
-
-.battle-scene.slapping .slap-arm {
-  animation: slap-swing 1.6s ease-in-out infinite;
-}
-@keyframes slap-swing {
-  0%, 20%, 100% { transform: rotate(-70deg); }
-  45% { transform: rotate(2deg); }
-  60% { transform: rotate(-15deg); }
-}
-
-.fighter-group.is-winner .slap-arm {
-  animation: victory-pump 0.5s ease-in-out 3 !important;
-}
-@keyframes victory-pump {
-  0%, 100% { transform: rotate(-140deg); }
-  50% { transform: rotate(-160deg); }
-}
-.battle-scene.slapping .defender-head-group {
-  animation: head-recoil 1.6s ease-in-out infinite;
-}
-@keyframes head-recoil {
-  0%, 38%, 100% { transform: rotate(0deg); }
-  46% { transform: rotate(16deg); }
-  56% { transform: rotate(-5deg); }
-}
-
 .battle-scene.kicking .kick-leg {
-  animation: kick-swing 0.6s ease-out 1;
+  animation: hip-kick 0.65s cubic-bezier(.25,.7,.2,1) 1;
 }
-@keyframes kick-swing {
+@keyframes hip-kick {
   0% { transform: rotate(0deg); }
-  45% { transform: rotate(-115deg); }
+  35% { transform: rotate(32deg); }
+  65% { transform: rotate(-118deg); }
+  80% { transform: rotate(-112deg); }
+  100% { transform: rotate(8deg); }
+}
+.battle-scene.kicking .defender-torso-group {
+  animation: kick-torso-twist 0.65s cubic-bezier(.25,.7,.2,1) 1;
+}
+@keyframes kick-torso-twist {
+  0% { transform: rotate(0deg); }
+  35% { transform: rotate(9deg); }
+  65% { transform: rotate(-11deg); }
   100% { transform: rotate(0deg); }
 }
 
@@ -414,25 +452,44 @@ button {
 .surrender-flag { opacity: 0; }
 .flag-pole { stroke: #fff; stroke-width: 3; }
 .flag-cloth { fill: #fff; }
-
 .fighter-group.is-defeated .surrender-flag { opacity: 1; }
-.fighter-group.is-defeated .slap-arm,
-.fighter-group.is-defeated .kick-leg,
-.fighter-group.is-defeated .defender-head-group {
-  animation: none !important;
-}
-#fighter-attacker {
+
+/* Mehrstufiger Sturz: Taumeln (mehrfaches Schwanken) -> Kippen -> Aufprall. */
+#fighter-attacker, #fighter-defender {
   transform-box: view-box;
-  transform-origin: 100px 150px;
-  transition: transform 0.5s ease, opacity 0.5s ease;
+  transition: opacity 0.4s ease;
 }
-#fighter-defender {
-  transform-box: view-box;
-  transform-origin: 300px 150px;
-  transition: transform 0.5s ease, opacity 0.5s ease;
+#fighter-attacker { transform-origin: 100px 150px; }
+#fighter-defender { transform-origin: 300px 150px; }
+
+#fighter-attacker.is-collapsing {
+  animation: stumble-fall-left 1.3s cubic-bezier(.3,0,.35,1) 1 forwards;
 }
-#fighter-attacker.is-defeated { transform: translate(0, 55px) rotate(85deg); opacity: 0.6; }
-#fighter-defender.is-defeated { transform: translate(0, 55px) rotate(-85deg); opacity: 0.6; }
+#fighter-defender.is-collapsing {
+  animation: stumble-fall-right 1.3s cubic-bezier(.3,0,.35,1) 1 forwards;
+}
+@keyframes stumble-fall-left {
+  0% { transform: translate(0,0) rotate(0deg); }
+  12% { transform: translate(-9px,0) rotate(-6deg); }
+  26% { transform: translate(7px,0) rotate(5deg); }
+  40% { transform: translate(-6px,2px) rotate(-4deg); }
+  58% { transform: translate(-3px,14px) rotate(-30deg); }
+  78% { transform: translate(0,42px) rotate(-68deg); }
+  92% { transform: translate(0,58px) rotate(-90deg); }
+  100% { transform: translate(0,55px) rotate(-85deg); }
+}
+@keyframes stumble-fall-right {
+  0% { transform: translate(0,0) rotate(0deg); }
+  12% { transform: translate(9px,0) rotate(6deg); }
+  26% { transform: translate(-7px,0) rotate(-5deg); }
+  40% { transform: translate(6px,2px) rotate(4deg); }
+  58% { transform: translate(3px,14px) rotate(30deg); }
+  78% { transform: translate(0,42px) rotate(68deg); }
+  92% { transform: translate(0,58px) rotate(90deg); }
+  100% { transform: translate(0,55px) rotate(85deg); }
+}
+#fighter-attacker.is-defeated { transform: translate(0, 55px) rotate(-85deg); opacity: 0.6; }
+#fighter-defender.is-defeated { transform: translate(0, 55px) rotate(85deg); opacity: 0.6; }
 
 .fighter-group.is-winner { animation: victory-bounce 0.5s ease-in-out 3; }
 @keyframes victory-bounce {
@@ -485,6 +542,57 @@ button {
 .add-btn-wide:active {
   background: var(--accent-2);
   border-color: var(--accent-2);
+}
+
+/* Plank manuelle Eingabe */
+.manual-entry-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+}
+.manual-entry-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.manual-entry-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.manual-entry-field input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 16px;
+  color: var(--text);
+  width: 100%;
+}
+.manual-entry-field input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.manual-entry-field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.manual-entry-card .secondary-btn { margin-top: 12px; }
+
+/* Gesamt-Übersicht */
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.points-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 16px 0 0;
+  line-height: 1.4;
 }
 
 /* Stats */
@@ -642,17 +750,21 @@ button {
 }
 .tab-btn {
   flex: 1;
+  min-width: 0;
   background: transparent;
   color: var(--text-muted);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 10px 0 8px;
-  font-size: 11px;
+  padding: 9px 2px 7px;
+  font-size: 10px;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.tab-icon { font-size: 20px; }
+.tab-icon { font-size: 18px; }
 .tab-btn.active { color: var(--accent); }
 
 /* Gruppe / Vergleich */

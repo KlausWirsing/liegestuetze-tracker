@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Liegestütze Tracker</title>
-<meta name="description" content="Einfacher Liegestütze-Zähler – Ziel: 10.000.">
+<meta name="description" content="Trainings-Tracker für Liegestütze, Plank und Squats.">
 <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
 <link rel="manifest" href="manifest.json">
@@ -18,26 +18,189 @@
 <body>
 
 <header class="topbar">
-  <h1>Liegestütze</h1>
+  <h1 id="page-title">Liegestütze</h1>
 </header>
 
-<main id="view-home" class="view">
+<main id="view-pushups" class="view">
   <section class="total-card">
-    <div class="total-label">Gesamt</div>
-    <div id="total-count" class="total-number">0</div>
+    <div class="total-label">Liegestütze Gesamt</div>
+    <div id="pushups-total-count" class="total-number">0</div>
   </section>
 
   <section class="progress-card">
     <div class="progress-header">
       <span>Ziel: 10.000 Liegestütze</span>
-      <span id="progress-pct">0 %</span>
+      <span id="pushups-progress-pct">0 %</span>
     </div>
-    <div class="progress-track">
-      <div id="progress-bar" class="progress-bar"></div>
-    </div>
-    <div id="progress-sub" class="progress-sub"></div>
+    <div class="progress-track"><div id="pushups-progress-bar" class="progress-bar"></div></div>
+    <div id="pushups-progress-sub" class="progress-sub"></div>
   </section>
 
+  <section class="buttons-grid">
+    <button class="add-btn" data-exercise="pushups" data-amount="1">+1</button>
+    <button class="add-btn" data-exercise="pushups" data-amount="5">+5</button>
+    <button class="add-btn" data-exercise="pushups" data-amount="10">+10</button>
+    <button class="add-btn" data-exercise="pushups" data-amount="20">+20</button>
+    <button class="add-btn add-btn-wide" data-exercise="pushups" data-amount="50">+50</button>
+  </section>
+
+  <section class="stats-grid">
+    <div class="stat-box"><div class="stat-value" id="pushups-stat-today">0</div><div class="stat-label">Heute</div></div>
+    <div class="stat-box"><div class="stat-value" id="pushups-stat-week">0</div><div class="stat-label">Diese Woche</div></div>
+    <div class="stat-box"><div class="stat-value" id="pushups-stat-month">0</div><div class="stat-label">Dieser Monat</div></div>
+    <div class="stat-box"><div class="stat-value" id="pushups-stat-total">0</div><div class="stat-label">Gesamt</div></div>
+  </section>
+
+  <section class="streak-card">
+    <div class="streak-flame">🔥</div>
+    <div>
+      <div id="pushups-streak-value" class="streak-value">0 Tage</div>
+      <div class="streak-label">aktuelle Streak</div>
+    </div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-header">
+      <span>Tagesverlauf</span>
+      <div class="range-toggle">
+        <button class="range-btn active" data-exercise="pushups" data-range="7">7 Tage</button>
+        <button class="range-btn" data-exercise="pushups" data-range="30">30 Tage</button>
+      </div>
+    </div>
+    <div id="pushups-chart" class="chart"></div>
+  </section>
+
+  <section class="avg-grid">
+    <div class="stat-box"><div class="stat-value" id="pushups-avg-total">0</div><div class="stat-label">Ø pro Tag (gesamt)</div></div>
+    <div class="stat-box"><div class="stat-value" id="pushups-avg-week">0</div><div class="stat-label">Ø letzte 7 Tage</div></div>
+  </section>
+</main>
+
+<main id="view-plank" class="view hidden">
+  <section class="total-card">
+    <div class="total-label">Plank Gesamt</div>
+    <div id="plank-total-count" class="total-number">0:00</div>
+  </section>
+
+  <section class="progress-card">
+    <div class="progress-header">
+      <span>Ziel: 5 Stunden Plank</span>
+      <span id="plank-progress-pct">0 %</span>
+    </div>
+    <div class="progress-track"><div id="plank-progress-bar" class="progress-bar"></div></div>
+    <div id="plank-progress-sub" class="progress-sub"></div>
+  </section>
+
+  <section class="buttons-grid">
+    <button class="add-btn" data-exercise="plank" data-amount="1">+1 Sek</button>
+    <button class="add-btn" data-exercise="plank" data-amount="5">+5 Sek</button>
+    <button class="add-btn" data-exercise="plank" data-amount="10">+10 Sek</button>
+    <button class="add-btn add-btn-wide" data-exercise="plank" data-amount="60">+1 Min</button>
+  </section>
+
+  <section class="manual-entry-card">
+    <div class="section-hint">Genaue Haltezeit eintragen</div>
+    <div class="manual-entry-row">
+      <div class="manual-entry-field">
+        <input id="plank-input-min" type="number" min="0" inputmode="numeric" placeholder="0">
+        <label for="plank-input-min">Min</label>
+      </div>
+      <div class="manual-entry-field">
+        <input id="plank-input-sec" type="number" min="0" max="59" inputmode="numeric" placeholder="0">
+        <label for="plank-input-sec">Sek</label>
+      </div>
+    </div>
+    <button id="plank-manual-submit" class="secondary-btn">Eintragen</button>
+  </section>
+
+  <section class="stats-grid">
+    <div class="stat-box"><div class="stat-value" id="plank-stat-today">0</div><div class="stat-label">Heute</div></div>
+    <div class="stat-box"><div class="stat-value" id="plank-stat-week">0</div><div class="stat-label">Diese Woche</div></div>
+    <div class="stat-box"><div class="stat-value" id="plank-stat-month">0</div><div class="stat-label">Dieser Monat</div></div>
+    <div class="stat-box"><div class="stat-value" id="plank-stat-total">0</div><div class="stat-label">Gesamt</div></div>
+  </section>
+
+  <section class="streak-card">
+    <div class="streak-flame">🔥</div>
+    <div>
+      <div id="plank-streak-value" class="streak-value">0 Tage</div>
+      <div class="streak-label">aktuelle Streak</div>
+    </div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-header">
+      <span>Tagesverlauf</span>
+      <div class="range-toggle">
+        <button class="range-btn active" data-exercise="plank" data-range="7">7 Tage</button>
+        <button class="range-btn" data-exercise="plank" data-range="30">30 Tage</button>
+      </div>
+    </div>
+    <div id="plank-chart" class="chart"></div>
+  </section>
+
+  <section class="avg-grid">
+    <div class="stat-box"><div class="stat-value" id="plank-avg-total">0</div><div class="stat-label">Ø pro Tag (gesamt)</div></div>
+    <div class="stat-box"><div class="stat-value" id="plank-avg-week">0</div><div class="stat-label">Ø letzte 7 Tage</div></div>
+  </section>
+</main>
+
+<main id="view-squats" class="view hidden">
+  <section class="total-card">
+    <div class="total-label">Squats Gesamt</div>
+    <div id="squats-total-count" class="total-number">0</div>
+  </section>
+
+  <section class="progress-card">
+    <div class="progress-header">
+      <span>Ziel: 10.000 Squats</span>
+      <span id="squats-progress-pct">0 %</span>
+    </div>
+    <div class="progress-track"><div id="squats-progress-bar" class="progress-bar"></div></div>
+    <div id="squats-progress-sub" class="progress-sub"></div>
+  </section>
+
+  <section class="buttons-grid">
+    <button class="add-btn" data-exercise="squats" data-amount="1">+1</button>
+    <button class="add-btn" data-exercise="squats" data-amount="5">+5</button>
+    <button class="add-btn" data-exercise="squats" data-amount="10">+10</button>
+    <button class="add-btn" data-exercise="squats" data-amount="20">+20</button>
+    <button class="add-btn add-btn-wide" data-exercise="squats" data-amount="50">+50</button>
+  </section>
+
+  <section class="stats-grid">
+    <div class="stat-box"><div class="stat-value" id="squats-stat-today">0</div><div class="stat-label">Heute</div></div>
+    <div class="stat-box"><div class="stat-value" id="squats-stat-week">0</div><div class="stat-label">Diese Woche</div></div>
+    <div class="stat-box"><div class="stat-value" id="squats-stat-month">0</div><div class="stat-label">Dieser Monat</div></div>
+    <div class="stat-box"><div class="stat-value" id="squats-stat-total">0</div><div class="stat-label">Gesamt</div></div>
+  </section>
+
+  <section class="streak-card">
+    <div class="streak-flame">🔥</div>
+    <div>
+      <div id="squats-streak-value" class="streak-value">0 Tage</div>
+      <div class="streak-label">aktuelle Streak</div>
+    </div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-header">
+      <span>Tagesverlauf</span>
+      <div class="range-toggle">
+        <button class="range-btn active" data-exercise="squats" data-range="7">7 Tage</button>
+        <button class="range-btn" data-exercise="squats" data-range="30">30 Tage</button>
+      </div>
+    </div>
+    <div id="squats-chart" class="chart"></div>
+  </section>
+
+  <section class="avg-grid">
+    <div class="stat-box"><div class="stat-value" id="squats-avg-total">0</div><div class="stat-label">Ø pro Tag (gesamt)</div></div>
+    <div class="stat-box"><div class="stat-value" id="squats-avg-week">0</div><div class="stat-label">Ø letzte 7 Tage</div></div>
+  </section>
+</main>
+
+<main id="view-total" class="view hidden">
   <section class="buddy-card">
     <svg id="buddy-svg" class="buddy" data-mood="neutral" data-muscle="2" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <line x1="100" y1="150" x2="80" y2="212" class="stick-line"/>
@@ -75,70 +238,55 @@
     <div id="buddy-caption" class="buddy-caption">Los geht's – dein Buddy wartet!</div>
   </section>
 
-  <section class="buttons-grid">
-    <button class="add-btn" data-amount="1">+1</button>
-    <button class="add-btn" data-amount="5">+5</button>
-    <button class="add-btn" data-amount="10">+10</button>
-    <button class="add-btn" data-amount="20">+20</button>
-    <button class="add-btn add-btn-wide" data-amount="50">+50</button>
+  <section class="total-card">
+    <div class="total-label">Gesamt-Punkte</div>
+    <div id="combined-total-count" class="total-number">0</div>
   </section>
-</main>
 
-<main id="view-stats" class="view hidden">
+  <section class="breakdown-grid">
+    <div class="stat-box"><div class="stat-value" id="breakdown-pushups">0</div><div class="stat-label">Liegestütze</div></div>
+    <div class="stat-box"><div class="stat-value" id="breakdown-squats">0</div><div class="stat-label">Squats</div></div>
+    <div class="stat-box"><div class="stat-value" id="breakdown-plank">0:00</div><div class="stat-label">Plank</div></div>
+  </section>
+
   <section class="stats-grid">
-    <div class="stat-box">
-      <div class="stat-value" id="stat-today">0</div>
-      <div class="stat-label">Heute</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-value" id="stat-week">0</div>
-      <div class="stat-label">Diese Woche</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-value" id="stat-month">0</div>
-      <div class="stat-label">Dieser Monat</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-value" id="stat-total">0</div>
-      <div class="stat-label">Gesamt</div>
-    </div>
+    <div class="stat-box"><div class="stat-value" id="combined-stat-today">0</div><div class="stat-label">Heute</div></div>
+    <div class="stat-box"><div class="stat-value" id="combined-stat-week">0</div><div class="stat-label">Diese Woche</div></div>
+    <div class="stat-box"><div class="stat-value" id="combined-stat-month">0</div><div class="stat-label">Dieser Monat</div></div>
+    <div class="stat-box"><div class="stat-value" id="combined-stat-total">0</div><div class="stat-label">Gesamt</div></div>
   </section>
 
   <section class="streak-card">
     <div class="streak-flame">🔥</div>
     <div>
-      <div id="streak-value" class="streak-value">0 Tage</div>
+      <div id="combined-streak-value" class="streak-value">0 Tage</div>
       <div class="streak-label">aktuelle Streak</div>
     </div>
   </section>
 
   <section class="chart-card">
     <div class="chart-header">
-      <span>Tagesverlauf</span>
+      <span>Tagesverlauf (Punkte)</span>
       <div class="range-toggle">
-        <button id="range-7" class="range-btn active" data-range="7">7 Tage</button>
-        <button id="range-30" class="range-btn" data-range="30">30 Tage</button>
+        <button class="range-btn active" data-exercise="combined" data-range="7">7 Tage</button>
+        <button class="range-btn" data-exercise="combined" data-range="30">30 Tage</button>
       </div>
     </div>
-    <div id="chart" class="chart"></div>
+    <div id="combined-chart" class="chart"></div>
   </section>
 
   <section class="avg-grid">
-    <div class="stat-box">
-      <div class="stat-value" id="avg-total">0</div>
-      <div class="stat-label">Ø pro Tag (gesamt)</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-value" id="avg-week">0</div>
-      <div class="stat-label">Ø letzte 7 Tage</div>
-    </div>
+    <div class="stat-box"><div class="stat-value" id="combined-avg-total">0</div><div class="stat-label">Ø Punkte/Tag (gesamt)</div></div>
+    <div class="stat-box"><div class="stat-value" id="combined-avg-week">0</div><div class="stat-label">Ø letzte 7 Tage</div></div>
   </section>
+
+  <p class="points-hint">1 Liegestütze = 1 Punkt · 1 Squat = 1 Punkt · 2 Sek. Plank = 1 Punkt</p>
 </main>
 
 <main id="view-group" class="view hidden">
   <section id="group-join-card" class="join-card">
     <h2 class="section-title">Mit Freunden vergleichen</h2>
-    <p class="section-hint">Erstelle eine Gruppe oder tritt mit einem Code bei, um live zu sehen, wer vorne liegt.</p>
+    <p class="section-hint">Erstelle eine Gruppe oder tritt mit einem Code bei, um live zu sehen, wer vorne liegt (kombinierte Punkte aus allen drei Übungen).</p>
 
     <label class="field-label" for="input-name">Dein Name</label>
     <input id="input-name" class="text-input" type="text" maxlength="24" placeholder="z. B. Max" autocomplete="off">
@@ -187,23 +335,29 @@
   <div class="battle-arena">
     <svg id="battle-svg" class="battle-scene" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
       <g id="fighter-attacker" class="fighter-group">
-        <line x1="100" y1="150" x2="80" y2="212" class="stick-line"/>
-        <line x1="100" y1="150" x2="120" y2="212" class="stick-line"/>
-        <line x1="100" y1="70" x2="100" y2="150" class="stick-line"/>
+        <g class="torso-group">
+          <line x1="100" y1="150" x2="80" y2="212" class="stick-line"/>
+          <line x1="100" y1="150" x2="120" y2="212" class="stick-line"/>
+          <line x1="100" y1="70" x2="100" y2="150" class="stick-line"/>
 
-        <polyline points="100,90 75,100 85,70" class="stick-line"/>
-        <path d="M88,95 Q77,82 88,72" class="bicep-curve"/>
+          <polyline points="100,90 75,100 85,70" class="stick-line" id="attacker-guard-arm"/>
+          <path d="M88,95 Q77,82 88,72" class="bicep-curve"/>
 
-        <g class="slap-arm">
-          <polyline points="100,90 185,80 270,50" class="stick-line"/>
-          <path d="M118,86 Q135,68 152,80" class="bicep-curve"/>
+          <g class="slap-arm slap-arm-a">
+            <polyline points="100,90 185,80 268,50" class="stick-line"/>
+            <path d="M118,86 Q135,68 152,80" class="bicep-curve"/>
+          </g>
+          <g class="slap-arm slap-arm-b">
+            <polyline points="100,90 185,100 268,50" class="stick-line"/>
+            <path d="M118,94 Q135,112 152,100" class="bicep-curve"/>
+          </g>
+
+          <circle cx="100" cy="48" r="22" class="stick-head"/>
+          <g class="buddy-eyes"><circle cx="92" cy="46" r="2.4"/><circle cx="108" cy="46" r="2.4"/></g>
+          <path d="M84,32 L98,38" class="brow"/>
+          <path d="M102,38 L116,32" class="brow"/>
+          <path d="M87,60 Q100,52 113,60" class="mouth"/>
         </g>
-
-        <circle cx="100" cy="48" r="22" class="stick-head"/>
-        <g class="buddy-eyes"><circle cx="92" cy="46" r="2.4"/><circle cx="108" cy="46" r="2.4"/></g>
-        <path d="M84,32 L98,38" class="brow"/>
-        <path d="M102,38 L116,32" class="brow"/>
-        <path d="M87,60 Q100,52 113,60" class="mouth"/>
 
         <g class="surrender-flag">
           <line x1="85" y1="70" x2="85" y2="42" class="flag-pole"/>
@@ -212,23 +366,25 @@
       </g>
 
       <g id="fighter-defender" class="fighter-group">
-        <line x1="300" y1="150" x2="320" y2="212" class="stick-line"/>
-        <g class="kick-leg">
-          <line x1="300" y1="150" x2="280" y2="212" class="stick-line"/>
-        </g>
-        <line x1="300" y1="70" x2="300" y2="150" class="stick-line"/>
+        <g class="defender-torso-group">
+          <line x1="300" y1="150" x2="320" y2="212" class="stick-line"/>
+          <g class="kick-leg">
+            <line x1="300" y1="150" x2="280" y2="212" class="stick-line"/>
+          </g>
+          <line x1="300" y1="70" x2="300" y2="150" class="stick-line"/>
 
-        <polyline points="300,90 325,100 315,70" class="stick-line"/>
-        <path d="M312,95 Q323,82 312,72" class="bicep-curve"/>
-        <polyline points="300,90 280,85 290,60" class="stick-line"/>
-        <path d="M285,85 Q270,68 288,78" class="bicep-curve"/>
+          <polyline points="300,90 325,100 315,70" class="stick-line"/>
+          <path d="M312,95 Q323,82 312,72" class="bicep-curve"/>
+          <polyline points="300,90 280,85 290,60" class="stick-line"/>
+          <path d="M285,85 Q270,68 288,78" class="bicep-curve"/>
 
-        <g class="defender-head-group">
-          <circle cx="300" cy="48" r="22" class="stick-head"/>
-          <g class="buddy-eyes"><circle cx="292" cy="46" r="2.4"/><circle cx="308" cy="46" r="2.4"/></g>
-          <path d="M284,32 L298,38" class="brow"/>
-          <path d="M302,38 L316,32" class="brow"/>
-          <path d="M287,60 Q300,52 313,60" class="mouth"/>
+          <g class="defender-head-group">
+            <circle cx="300" cy="48" r="22" class="stick-head"/>
+            <g class="buddy-eyes"><circle cx="292" cy="46" r="2.4"/><circle cx="308" cy="46" r="2.4"/></g>
+            <path d="M284,32 L298,38" class="brow"/>
+            <path d="M302,38 L316,32" class="brow"/>
+            <path d="M287,60 Q300,52 313,60" class="mouth"/>
+          </g>
         </g>
 
         <g class="surrender-flag">
@@ -241,11 +397,6 @@
   </div>
   <div id="battle-result" class="battle-result hidden"></div>
   <button id="battle-close" class="primary-btn hidden">Weiter</button>
-</div>
-
-<div id="undo-toast" class="undo-toast hidden">
-  <span id="undo-text"></span>
-  <button id="undo-btn">Rückgängig</button>
 </div>
 
 <div id="copy-toast" class="undo-toast hidden">
@@ -265,19 +416,40 @@
   </div>
 </div>
 
+<div id="pushups-undo-toast" class="undo-toast hidden">
+  <span id="pushups-undo-text"></span>
+  <button id="pushups-undo-btn">Rückgängig</button>
+</div>
+<div id="plank-undo-toast" class="undo-toast hidden">
+  <span id="plank-undo-text"></span>
+  <button id="plank-undo-btn">Rückgängig</button>
+</div>
+<div id="squats-undo-toast" class="undo-toast hidden">
+  <span id="squats-undo-text"></span>
+  <button id="squats-undo-btn">Rückgängig</button>
+</div>
+
 <nav class="tabbar">
-  <button id="tab-home" class="tab-btn active" data-view="view-home">
-    <span class="tab-icon">🏠</span><span>Start</span>
+  <button id="tab-pushups" class="tab-btn active" data-view="view-pushups" data-title="Liegestütze">
+    <span class="tab-icon">💪</span><span>Liegest.</span>
   </button>
-  <button id="tab-stats" class="tab-btn" data-view="view-stats">
-    <span class="tab-icon">📊</span><span>Statistik</span>
+  <button id="tab-plank" class="tab-btn" data-view="view-plank" data-title="Plank">
+    <span class="tab-icon">⏱️</span><span>Plank</span>
   </button>
-  <button id="tab-group" class="tab-btn" data-view="view-group">
-    <span class="tab-icon">🤼</span><span>Vergleich</span>
+  <button id="tab-squats" class="tab-btn" data-view="view-squats" data-title="Squats">
+    <span class="tab-icon">🦵</span><span>Squats</span>
+  </button>
+  <button id="tab-total" class="tab-btn" data-view="view-total" data-title="Gesamt">
+    <span class="tab-icon">📊</span><span>Gesamt</span>
+  </button>
+  <button id="tab-group" class="tab-btn" data-view="view-group" data-title="Vergleich">
+    <span class="tab-icon">🤼</span><span>Vergl.</span>
   </button>
 </nav>
 
+<script src="exercise.js"></script>
 <script src="app.js"></script>
+<script src="combined.js"></script>
 <script src="buddy.js"></script>
 <script src="battle.js"></script>
 <script src="firebase-config.js"></script>

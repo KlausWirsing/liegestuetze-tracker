@@ -19,7 +19,7 @@
   function whenReady(fn, onTimeout) {
     var waited = 0;
     function check() {
-      if (window.PushupApp && window.PushupCloud && window.PushupBattle) {
+      if (window.PushupCombined && window.PushupCloud && window.PushupBattle) {
         window.PushupCloud.onReady(function () { fn(); });
       } else if (waited > 6000) {
         onTimeout();
@@ -33,7 +33,7 @@
 
   whenReady(function () {
     var cloud = window.PushupCloud;
-    var appApi = window.PushupApp;
+    var appApi = window.PushupCombined;
     var battle = window.PushupBattle;
 
     var joinCard = document.getElementById("group-join-card");
@@ -244,7 +244,7 @@
 
         var total = document.createElement("div");
         total.className = "leaderboard-total";
-        total.textContent = fmt(p.total);
+        total.textContent = fmt(p.total) + " Pkt.";
         row.appendChild(total);
 
         listEl.appendChild(row);

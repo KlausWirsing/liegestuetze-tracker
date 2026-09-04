@@ -8,83 +8,61 @@
   var MAX_MUSCLE = 5;
   var DEFAULT_MUSCLE = 2;
 
-  var KEY_MUSCLE = "pushup_muscle_level_v1";
-  var KEY_MUSCLE_CHECKED = "pushup_muscle_checked_until_v1";
-  var KEY_BIG_MILESTONE = "pushup_last_milestone_v1";
-  var KEY_SMALL_MILESTONE = "pushup_last_small_milestone_v1";
+  var KEY_MUSCLE = "combined_muscle_level_v1";
+  var KEY_MUSCLE_CHECKED = "combined_muscle_checked_until_v1";
+  var KEY_BIG_MILESTONE = "combined_last_milestone_v1";
+  var KEY_SMALL_MILESTONE = "combined_last_small_milestone_v1";
 
   var BIG_MESSAGES = [
-    "Wahnsinn! Du hast {n} Liegestütze geschafft!",
-    "{n} Liegestütze! Du bist nicht mehr zu stoppen!",
+    "Wahnsinn! Du hast {n} Punkte geschafft!",
+    "{n} Punkte! Du bist nicht mehr zu stoppen!",
     "Boom! {n} erreicht – weiter so, Champion!",
-    "{n} Liegestütze im Kasten! Absolute Bestleistung!",
-    "Respekt! {n} Liegestütze – dein Buddy ist mächtig stolz auf dich!",
+    "{n} Punkte im Kasten! Absolute Bestleistung!",
+    "Respekt! {n} Punkte – dein Buddy ist mächtig stolz auf dich!",
     "{n}! Deine Muckis merken das schon. Dran bleiben!"
   ];
   var SMALL_MESSAGES = [
-    "{n} geschafft! Weiter so 👊",
-    "{n} Stück – sauber!",
+    "{n} Punkte! Weiter so 👊",
+    "{n} Punkte – sauber!",
     "{n}! Dein Buddy nickt anerkennend.",
-    "{n} erreicht, nicht nachlassen!",
+    "{n} Punkte erreicht, nicht nachlassen!",
     "{n} im Sack. Nächste Runde!"
   ];
 
-  function pad(n) { return n < 10 ? "0" + n : "" + n; }
-  function dateKey(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
-  function startOfDay(d) { var r = new Date(d); r.setHours(0, 0, 0, 0); return r; }
-  function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); return r; }
+  var U = window.ExerciseUtils;
+
   function parseKey(key) { return new Date(key + "T00:00:00"); }
 
-  function dailyTotals(entries) {
-    var map = {};
-    for (var i = 0; i < entries.length; i++) {
-      var k = dateKey(new Date(entries[i].ts));
-      map[k] = (map[k] || 0) + entries[i].count;
-    }
-    return map;
-  }
-
-  function firstEntryDay(entries) {
-    if (entries.length === 0) return null;
-    var min = entries[0].ts;
-    for (var i = 1; i < entries.length; i++) {
-      if (entries[i].ts < min) min = entries[i].ts;
-    }
-    return startOfDay(new Date(min));
-  }
-
   // Muskeln: jeder abgeschlossene Tag wird gegen den bisherigen eigenen
-  // Gesamtdurchschnitt (alle Tage davor) verglichen - "täglich vs. generell".
+  // Gesamtdurchschnitt (alle Tage davor, über alle Übungen kombiniert) verglichen.
   // Drüber -> Muckis auf, drunter -> Muckis ab. Kein fester Zeitrahmen nötig.
-  function evaluateMuscle(entries) {
+  function evaluateMuscle(map, firstDay) {
     var level = parseInt(localStorage.getItem(KEY_MUSCLE), 10);
     if (isNaN(level)) level = DEFAULT_MUSCLE;
 
-    var today = startOfDay(new Date());
+    var today = U.startOfDay(new Date());
     var checkedUntil = localStorage.getItem(KEY_MUSCLE_CHECKED);
 
     if (!checkedUntil) {
-      localStorage.setItem(KEY_MUSCLE_CHECKED, dateKey(addDays(today, -1)));
+      localStorage.setItem(KEY_MUSCLE_CHECKED, U.dateKey(U.addDays(today, -1)));
       localStorage.setItem(KEY_MUSCLE, String(level));
       return level;
     }
 
-    var firstDay = firstEntryDay(entries);
-    var map = dailyTotals(entries);
-    var cursor = addDays(parseKey(checkedUntil), 1);
+    var cursor = U.addDays(parseKey(checkedUntil), 1);
     var safety = 0;
 
     while (cursor < today && safety < 3650) {
-      var dayTotal = map[dateKey(cursor)] || 0;
+      var dayTotal = map[U.dateKey(cursor)] || 0;
 
       var priorSum = 0;
       var priorDays = 0;
       if (firstDay && firstDay < cursor) {
         var pc = new Date(firstDay);
         while (pc < cursor) {
-          priorSum += map[dateKey(pc)] || 0;
+          priorSum += map[U.dateKey(pc)] || 0;
           priorDays++;
-          pc = addDays(pc, 1);
+          pc = U.addDays(pc, 1);
         }
       }
       var reference = priorDays > 0 ? (priorSum / priorDays) : SEED_BASELINE;
@@ -94,29 +72,19 @@
       } else {
         level = Math.max(MIN_MUSCLE, level - 1);
       }
-      cursor = addDays(cursor, 1);
+      cursor = U.addDays(cursor, 1);
       safety++;
     }
 
-    localStorage.setItem(KEY_MUSCLE_CHECKED, dateKey(addDays(today, -1)));
+    localStorage.setItem(KEY_MUSCLE_CHECKED, U.dateKey(U.addDays(today, -1)));
     localStorage.setItem(KEY_MUSCLE, String(level));
     return level;
   }
 
-  function lastEntryDate(entries) {
-    if (entries.length === 0) return null;
-    var max = entries[0].ts;
-    for (var i = 1; i < entries.length; i++) {
-      if (entries[i].ts > max) max = entries[i].ts;
-    }
-    return new Date(max);
-  }
-
-  function computeMood(entries) {
-    var last = lastEntryDate(entries);
-    if (!last) return "neutral";
-    var today = startOfDay(new Date());
-    var lastDay = startOfDay(last);
+  function computeMood(lastTs) {
+    if (!lastTs) return "neutral";
+    var today = U.startOfDay(new Date());
+    var lastDay = U.startOfDay(new Date(lastTs));
     var diffDays = Math.round((today.getTime() - lastDay.getTime()) / 86400000);
     if (diffDays <= 0) return "happy";
     if (diffDays === 1) return "neutral";
@@ -127,7 +95,7 @@
     if (mood === "angry") {
       return level <= 1
         ? "Autsch … Zeit für ein Comeback! 😤"
-        : "Wo bleibst du? Dein Buddy vermisst die Liegestütze!";
+        : "Wo bleibst du? Dein Buddy vermisst dich!";
     }
     if (mood === "neutral") {
       return "Heute schon trainiert? Dran bleiben!";
@@ -207,11 +175,13 @@
   var currentMood = "neutral";
 
   function render() {
-    var entries = window.PushupApp.getEntries();
-    var total = window.PushupApp.getTotal();
+    var combined = window.PushupCombined;
+    var map = combined.dailyTotalsMap();
+    var firstDay = U.startOfDay(combined.firstEntryDate());
+    var total = combined.getTotal();
 
-    currentLevel = evaluateMuscle(entries);
-    currentMood = computeMood(entries);
+    currentLevel = evaluateMuscle(map, firstDay);
+    currentMood = computeMood(combined.getLastEntryTimestamp());
 
     buddySvg.setAttribute("data-muscle", String(currentLevel));
     buddySvg.setAttribute("data-mood", currentMood);
@@ -233,5 +203,5 @@
   };
 
   render();
-  window.PushupApp.onChange(render);
+  window.PushupCombined.onChange(render);
 })();

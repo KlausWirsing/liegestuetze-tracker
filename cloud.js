@@ -142,8 +142,8 @@ import {
 
   function currentStatsExtra() {
     var extra = {};
-    if (window.PushupApp) {
-      extra.todayTotal = window.PushupApp.getTodayTotal();
+    if (window.PushupCombined) {
+      extra.todayTotal = Math.round(window.PushupCombined.getTodayTotal());
       var d = new Date();
       extra.todayDate = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
     }
